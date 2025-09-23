@@ -125,27 +125,27 @@ export default function FileUpload({
           </div>
         ) : (
           <div className="space-y-4">
-            <Upload className="h-12 w-12 mx-auto text-gray-400" />
+            <Upload className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400" />
             <div>
-              <p className="text-lg font-medium text-gray-900">
+              <p className="text-base sm:text-lg font-medium text-gray-900">
                 {isDragActive ? 'Drop your file here' : 'Upload lab results'}
               </p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 mt-1 px-2">
                 Drag & drop or click to select PDF, image, or text file
               </p>
             </div>
             
-            <div className="flex justify-center space-x-4 text-xs text-gray-500">
+            <div className="flex justify-center space-x-3 sm:space-x-4 text-xs text-gray-500">
               <div className="flex items-center space-x-1">
-                <FileIcon className="h-4 w-4" />
+                <FileIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>PDF</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Image className="h-4 w-4" />
+                <Image className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Image</span>
               </div>
               <div className="flex items-center space-x-1">
-                <FileText className="h-4 w-4" />
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Text</span>
               </div>
             </div>
