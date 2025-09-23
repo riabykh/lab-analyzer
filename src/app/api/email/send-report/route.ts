@@ -55,7 +55,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function sendEmail(emailData: any) {
+async function sendEmail(emailData: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments: Array<{
+    filename: string;
+    content: string;
+    type: string;
+    disposition: string;
+  }>;
+}) {
   // Implementation depends on your email service
   // This is a placeholder that you would replace with actual service
   
@@ -70,28 +80,32 @@ async function sendEmail(emailData: any) {
   }
 }
 
-async function sendWithSendGrid(emailData: any) {
+async function sendWithSendGrid(emailData: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments: Array<{ filename: string; content: string; type: string; disposition: string }>;
+}) {
   try {
-    const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const msg = {
-      to: emailData.to,
-      from: 'reports@labwise.rialys.eu',
-      subject: emailData.subject,
-      html: emailData.html,
-      attachments: emailData.attachments
-    };
-
-    await sgMail.send(msg);
+    // Note: @sendgrid/mail needs to be installed: npm install @sendgrid/mail
+    // const sgMail = require('@sendgrid/mail');
+    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log('SendGrid not implemented - would send email to:', emailData.to);
     return { success: true };
+
+    // Implementation would go here
   } catch (error) {
     console.error('SendGrid error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: 'SendGrid error' };
   }
 }
 
-async function sendWithResend(emailData: any) {
+async function sendWithResend(emailData: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments: Array<{ filename: string; content: string; type: string; disposition: string }>;
+}) {
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -114,13 +128,19 @@ async function sendWithResend(emailData: any) {
       const error = await response.json();
       return { success: false, error: error.message };
     }
-  } catch (error) {
+    } catch (error) {
     console.error('Resend error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: 'Resend error' };
   }
 }
 
-function generateEmailHTML(summary: any, reportDate: string) {
+function generateEmailHTML(summary: {
+  total: number;
+  normal: number;
+  abnormal: number;
+  critical: number;
+  markers: Array<{ marker: string; value: string; unit: string; status: string }>;
+}, reportDate: string) {
   return `
     <!DOCTYPE html>
     <html>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPaidSession } from '@/lib/auth';
-import { cookies } from 'next/headers';
 
 // Verify Paddle webhook signature
 function verifyPaddleSignature(body: string, signature: string): boolean {
@@ -25,7 +24,6 @@ export async function POST(request: NextRequest) {
     if (alertName === 'subscription_payment_succeeded' || alertName === 'subscription_created') {
       const email = data.get('email');
       const subscriptionId = data.get('subscription_id');
-      const passthrough = data.get('passthrough'); // Contains return URL
 
       if (!email || !subscriptionId) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
