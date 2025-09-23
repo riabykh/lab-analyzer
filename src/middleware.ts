@@ -1,39 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySession } from './src/lib/auth';
+import { verifySession } from './lib/auth';
+import { RateLimiter, getSecurityHeaders } from './lib/security';
 
-// Rate limiting storage (in production, use Redis)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-// Rate limiting function
-function isRateLimited(ip: string, limit: number = 10, windowMs: number = 60000): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record || record.resetTime < now) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-    return false;
-  }
-
-  if (record.count >= limit) {
-    return true;
-  }
-
-  record.count++;
-  return false;
-}
+// Initialize rate limiters
+const generalRateLimit = new RateLimiter(60000, 20, 300000); // 20 req/min, 5min block
+const analysisRateLimit = new RateLimiter(60000, 5, 300000); // 5 req/min, 5min block
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const clientIP = request.ip || 'unknown';
 
-  // Security headers for all requests
+  // Apply security headers
+  const securityHeaders = getSecurityHeaders();
   const response = NextResponse.next();
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
 
   // CORS for API routes
   if (pathname.startsWith('/api/')) {
@@ -60,9 +43,13 @@ export async function middleware(request: NextRequest) {
 
   // Rate limiting for API routes
   if (pathname.startsWith('/api/')) {
-    if (isRateLimited(clientIP, 20, 60000)) { // 20 requests per minute
+    const rateLimitResult = await generalRateLimit.check(clientIP);
+    if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded. Please wait before trying again.' },
+        { 
+          error: 'Rate limit exceeded. Please wait before trying again.',
+          resetTime: rateLimitResult.resetTime 
+        },
         { status: 429 }
       );
     }
@@ -70,9 +57,13 @@ export async function middleware(request: NextRequest) {
 
   // Enhanced rate limiting for analysis endpoint
   if (pathname === '/api/analyze') {
-    if (isRateLimited(`${clientIP}:analyze`, 5, 60000)) { // 5 analysis per minute
+    const analysisLimitResult = await analysisRateLimit.check(`${clientIP}:analyze`);
+    if (!analysisLimitResult.success) {
       return NextResponse.json(
-        { error: 'Analysis rate limit exceeded. Please wait before analyzing another file.' },
+        { 
+          error: 'Analysis rate limit exceeded. Please wait before analyzing another file.',
+          resetTime: analysisLimitResult.resetTime 
+        },
         { status: 429 }
       );
     }

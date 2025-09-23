@@ -1,0 +1,24 @@
+import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getCurrentSession } from '@/lib/auth';
+import PaidUserDashboard from '@/components/PaidUserDashboard';
+
+export const metadata: Metadata = {
+  title: 'LabWise Dashboard | Lab Analysis',
+  description: 'Analyze your lab results with unlimited AI-powered insights.',
+};
+
+export default async function AppPage() {
+  const authResult = await getCurrentSession();
+  
+  if (!authResult.success || !authResult.session) {
+    redirect('/checkout');
+  }
+
+  // Verify this is a paid user
+  if (authResult.session.plan !== 'plus') {
+    redirect('/checkout');
+  }
+
+  return <PaidUserDashboard session={authResult.session} />;
+}
