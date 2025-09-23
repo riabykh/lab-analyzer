@@ -1,72 +1,73 @@
-# 🚀 Railway Environment Setup
+# Railway Deployment Setup
 
-## Required Environment Variables
+## Environment Variables Required
 
-Your LabWise app needs these environment variables to work:
+Set these environment variables in your Railway project:
 
-### 1. OpenAI API Key (REQUIRED)
+### Essential Variables
+
+```bash
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_MODEL=gpt-5-2025-08-07
+
+# Application URLs  
+NEXT_PUBLIC_APP_URL=https://app.labwise.rialys.eu
+
+# Security
+JWT_SECRET=your-random-jwt-secret-32-chars-min
+
+# Node Environment
+NODE_ENV=production
 ```
-OPENAI_API_KEY=your_openai_api_key_here
+
+### Optional Variables
+
+```bash
+# Email Services (choose one)
+SENDGRID_API_KEY=your-sendgrid-key
+RESEND_API_KEY=your-resend-key
+
+# Analytics
+NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
 ```
 
-**How to get it:**
-1. Go to https://platform.openai.com/api-keys
-2. Create a new API key
-3. Copy the key (starts with `sk-proj-...`)
+## Model Configuration Notes
 
-### 2. Optional Variables
-```
-OPENAI_MODEL=gpt-4o
-JWT_SECRET=your_jwt_secret_here
-PADDLE_WEBHOOK_SECRET=your_paddle_webhook_secret
-```
+### GPT Model Selection
+- **Text/PDF Analysis**: `gpt-5-2025-08-07` (recommended for best results)
+- **Image OCR**: `gpt-4o-2024-11-20` (vision capability required)
+- **Fallback**: If GPT-5 is not available, falls back to `gpt-4o-2024-11-20`
 
-## 🔧 Setting Up in Railway
+### Cost Considerations
+- GPT-5 provides better accuracy for medical analysis
+- GPT-4o is more cost-effective but slightly less accurate
+- Image processing always requires vision-capable models
 
-1. **Go to Railway Dashboard**
-   - Visit https://railway.app
-   - Find your `lab-analyzer` project
+## Deployment Steps
 
-2. **Add Environment Variables**
-   - Click on your project
-   - Go to "Variables" tab
-   - Click "Add Variable"
-   - Add each variable name and value
+1. **Set Environment Variables** in Railway dashboard
+2. **Connect Repository** to your Railway project
+3. **Configure Custom Domain** (app.labwise.rialys.eu)
+4. **Deploy** - Railway will automatically build and deploy
+5. **Test** the `/api/health` endpoint
 
-3. **Required Variables:**
-   ```
-   Variable Name: OPENAI_API_KEY
-   Variable Value: sk-proj-your-actual-key-here
-   ```
+## Troubleshooting
 
-4. **Redeploy**
-   - Railway will automatically redeploy with new variables
-   - Wait for deployment to complete
+### Common Issues
+- **API Key not working**: Ensure `OPENAI_API_KEY` is set correctly
+- **Model errors**: Verify your OpenAI account has access to GPT-5
+- **PDF processing fails**: Check the logs for specific PDF parsing errors
+- **Domain issues**: Ensure DNS is properly configured for the custom domain
 
-## 🧪 Testing
+### Debug Endpoints
+- `/api/test-env` - Check environment configuration
+- `/api/health` - Basic health check
+- `/api/debug-pdf` - Comprehensive PDF processing debug
 
-After setting up environment variables:
+## Performance
 
-1. Visit your Railway URL
-2. Click "Start Free Analysis"
-3. Upload a PDF lab report
-4. Check browser console (F12) for detailed logs
-5. Should work without "nothing happens" issue
-
-## 🔍 Debugging
-
-If still not working, check browser console for:
-- `OpenAI API key not configured` → Set OPENAI_API_KEY
-- `Authentication required` → Click "Start Free Analysis" first
-- `PDF parsing failed` → Try uploading as image (PNG/JPG)
-
-## 📱 User Flow
-
-**Correct Flow:**
-1. Landing page → Click "Start Free Analysis" 
-2. Gets redirected to /free with session
-3. Upload file → Should work with authentication!
-
-**Wrong Flow:**
-1. Going directly to Railway URL and trying to upload
-2. Will get "Authentication required" error
+- **Cold starts**: ~2-3 seconds
+- **PDF processing**: ~5-15 seconds depending on file size
+- **Text analysis**: ~3-10 seconds depending on content length
+- **Image OCR**: ~10-20 seconds for complex documents

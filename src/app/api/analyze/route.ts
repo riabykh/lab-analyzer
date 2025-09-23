@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       const base64 = Buffer.from(buffer).toString('base64');
       
       const ocrResponse = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: process.env.OPENAI_MODEL || 'gpt-4o-2024-11-20',
         messages: [
           {
             role: 'user',
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
 
     // Analyze the extracted text with ChatGPT
     const analysisResponse = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o',
+      model: process.env.OPENAI_MODEL || 'gpt-5-2025-08-07',
       messages: [
         {
           role: 'system',
