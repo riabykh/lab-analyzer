@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Processing Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+        .results { background: #f5f5f5; padding: 20px; margin: 20px 0; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 PDF Processing Test</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p>Click here to select a PDF or text file</p>
+            <input type="file" id="fileInput" style="display: none;" accept=".pdf,.txt">
+        </div>
+        
+        <button onclick="testUpload()">Test Upload</button>
+        <button onclick="testTextSample()">Test with Text Sample</button>
+        
+        <div id="results" class="results" style="display: none;">
+            <h3>Results:</h3>
+            <pre id="resultContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        function showResults(data) {
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('resultContent').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            console.log('Testing file:', file.name);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/test-pdf-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Test result:', result);
+                showResults(result);
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                showResults({ error: error.message });
+            }
+        }
+        
+        async function testTextSample() {
+            const sampleText = `Lab Results - Test Report
+Patient: Test User
+Date: 2024-01-15
+
+COMPLETE BLOOD COUNT (CBC)
+White Blood Cells: 7.2 K/uL (Normal: 4.0-11.0)
+Red Blood Cells: 4.8 M/uL (Normal: 4.2-5.4)
+Hemoglobin: 14.2 g/dL (Normal: 13.5-17.5)
+
+BASIC METABOLIC PANEL
+Glucose: 95 mg/dL (Normal: 70-100)
+Sodium: 142 mEq/L (Normal: 136-145)`;
+            
+            const blob = new Blob([sampleText], { type: 'text/plain' });
+            const formData = new FormData();
+            formData.append('file', blob, 'test-sample.txt');
+            
+            try {
+                const response = await fetch('/api/test-pdf-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Text test result:', result);
+                showResults(result);
+                
+            } catch (error) {
+                console.error('Text test failed:', error);
+                showResults({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>
