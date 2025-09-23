@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
       size: file?.size
     });
 
+    // Enhanced logging for debugging
+    console.log('🔍 Processing file type:', file.type);
+    console.log('🔍 File size:', file.size, 'bytes');
+
     if (!file) {
       console.error('❌ No file provided in formData');
       return NextResponse.json(
@@ -138,12 +142,20 @@ export async function POST(request: NextRequest) {
         }
         
       } catch (pdfError) {
-        console.log('PDF text extraction failed, attempting OCR...');
+        console.error('❌ PDF text extraction failed:', pdfError);
+        console.error('❌ PDF error details:', {
+          name: pdfError instanceof Error ? pdfError.name : 'Unknown',
+          message: pdfError instanceof Error ? pdfError.message : String(pdfError),
+          stack: pdfError instanceof Error ? pdfError.stack?.slice(0, 500) : 'No stack'
+        });
         
-        // If PDF text extraction fails, return a helpful error message
-        console.error('PDF text extraction failed:', pdfError);
+        // Return detailed error for debugging
         return NextResponse.json(
-          { error: 'Failed to extract text from PDF. The file may be a scanned document or image-based PDF. Please try converting it to a text file or uploading it as an image (PNG/JPG) for OCR processing.' },
+          { 
+            error: 'Failed to extract text from PDF', 
+            details: pdfError instanceof Error ? pdfError.message : String(pdfError),
+            suggestion: 'Try uploading as .txt file or image (PNG/JPG) for OCR processing'
+          },
           { status: 400 }
         );
       }
@@ -194,6 +206,10 @@ export async function POST(request: NextRequest) {
     console.log('Total text length:', fileText.length);
 
     // Analyze the extracted text with ChatGPT
+    console.log('🤖 Starting GPT-5 analysis...');
+    console.log('🤖 Text length to analyze:', fileText.length);
+    console.log('🤖 Using model:', process.env.OPENAI_MODEL || 'gpt-5-2025-08-07');
+    
     const analysisResponse = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-5-2025-08-07',
       messages: [
@@ -244,14 +260,30 @@ ${fileText.slice(0, 4000)}`,
       response_format: { type: "json_object" }
     });
 
+    console.log('🤖 GPT-5 response received');
+    console.log('🤖 Response metadata:', {
+      id: analysisResponse.id,
+      model: analysisResponse.model,
+      choices: analysisResponse.choices?.length,
+      finishReason: analysisResponse.choices?.[0]?.finish_reason
+    });
+
     const analysisContent = analysisResponse.choices[0]?.message?.content;
     
     if (!analysisContent) {
+      console.error('❌ No content in AI response');
+      console.error('❌ Full response:', JSON.stringify(analysisResponse, null, 2));
       return NextResponse.json(
-        { error: 'No analysis received from AI' },
+        { 
+          error: 'No analysis received from AI',
+          details: `Finish reason: ${analysisResponse.choices?.[0]?.finish_reason}`,
+          response_id: analysisResponse.id
+        },
         { status: 500 }
       );
     }
+
+    console.log('✅ Analysis content length:', analysisContent.length);
 
     // Parse the JSON response
     let analysis;
