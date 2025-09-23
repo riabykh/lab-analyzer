@@ -66,7 +66,7 @@ async function testOpenAI() {
       const response = await openai.chat.completions.create({
         model: 'gpt-5-2025-08-07',
         messages: [{ role: 'user', content: 'Say "test successful"' }],
-        max_tokens: 10
+        max_completion_tokens: 10
       });
       
       console.log('✅ OpenAI API test successful');
