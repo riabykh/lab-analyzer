@@ -3,10 +3,18 @@ import { createFreeSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    let email = null;
+    
+    // Try to get email from request, but don't require it
+    try {
+      const body = await request.json();
+      email = body.email;
+    } catch {
+      // No body or invalid JSON - that's fine for anonymous free sessions
+    }
 
-    // Create free user session
-    const sessionToken = await createFreeSession(email);
+    // Create free user session (anonymous if no email)
+    const sessionToken = await createFreeSession(email || 'anonymous@free.user');
 
     // Set session cookie
     const response = NextResponse.json({ 
