@@ -31,7 +31,7 @@ export default function PaidUserDashboard({ session }: PaidUserDashboardProps) {
     resultCount: number;
   }>>([]);
 
-  const { downloadPDF, previewPDF } = usePDFGenerator(results, {
+  const { downloadPDF, previewPDF } = usePDFGenerator(results as any, {
     reportId: `LW-${Date.now()}`,
     testDate: new Date().toLocaleDateString(),
   });

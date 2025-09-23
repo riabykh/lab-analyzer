@@ -138,7 +138,7 @@ export default function PDFGenerator({ results, patientInfo, onGenerated }: PDFG
         4: { cellWidth: 20 }, // Status
         5: { cellWidth: 35 }  // Explanation
       },
-      didParseCell: function(data) {
+      didParseCell: function(data: any) {
         if (data.section === 'body' && data.column.index === 4) {
           const status = data.cell.text[0]?.toLowerCase();
           if (status === 'critical') {
@@ -211,7 +211,7 @@ export default function PDFGenerator({ results, patientInfo, onGenerated }: PDFG
     });
     
     // Footer on last page
-    const totalPages = doc.internal.getNumberOfPages();
+    const totalPages = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       doc.setFontSize(8);

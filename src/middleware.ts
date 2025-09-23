@@ -8,7 +8,7 @@ const analysisRateLimit = new RateLimiter(60000, 5, 300000); // 5 req/min, 5min 
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const clientIP = request.ip || 'unknown';
+    const clientIP = (request as any).ip || 'unknown';
 
   // Apply security headers
   const securityHeaders = getSecurityHeaders();

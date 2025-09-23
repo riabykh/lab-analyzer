@@ -26,7 +26,7 @@ export async function createSession(userData: Omit<UserSession, 'expiresAt'>): P
     expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
   };
 
-  return await new SignJWT(session)
+  return await new SignJWT(session as any)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('24h')
@@ -52,7 +52,7 @@ export async function verifySession(token: string): Promise<AuthResult> {
 
 // Get current session from cookies
 export async function getCurrentSession(): Promise<AuthResult> {
-  const cookieStore = cookies();
+  const cookieStore = await (cookies as any)();
   const token = cookieStore.get('labwise_session')?.value;
 
   if (!token) {

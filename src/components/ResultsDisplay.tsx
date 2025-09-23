@@ -173,7 +173,7 @@ export default function ResultsDisplay({
               ))}
               
               {/* Premium Upgrade Prompt for Free Users */}
-              {!isPremium && hiddenResultsCount > 0 && (
+              {!isPremium && hiddenResultsCount > 0 && analysis && (
                 <tr className="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-l-blue-500">
                   <td colSpan={5} className="px-4 py-8 text-center">
                     <div className="relative">
