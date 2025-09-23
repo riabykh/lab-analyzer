@@ -10,6 +10,8 @@ export default function Home() {
   // Redirect to free flow for first-time users
   const handleFreeAccess = async () => {
     try {
+      console.log('🆓 Creating free session...');
+      
       // Create free session
       const response = await fetch('/api/auth/free', {
         method: 'POST',
@@ -17,9 +19,17 @@ export default function Home() {
         body: JSON.stringify({ email: 'guest@free.user' })
       });
       
+      console.log('📊 Free session response:', response.status);
+      console.log('🍪 Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Free session created:', data);
+        console.log('🔄 Redirecting to /free...');
         router.push('/free');
       } else {
+        const errorData = await response.json();
+        console.error('❌ Free session failed:', errorData);
         alert('Failed to create free session. Please try again.');
       }
     } catch (error) {
