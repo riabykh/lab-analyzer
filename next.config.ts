@@ -9,4 +9,8 @@ const nextConfig: NextConfig = {
     // Disable TypeScript checks during builds for production deployment
     ignoreBuildErrors: true,
   },
+  experimental: {
+    // Ensure configuration is applied
+    forceSwcTransforms: true,
+  },
 };
