@@ -19,15 +19,26 @@ interface Analysis {
 }
 
 interface ResultsDisplayProps {
-  analysis: Analysis;
-  onNewAnalysis: () => void;
+  analysis?: Analysis;
+  results?: any[];
+  onNewAnalysis?: () => void;
   isPremium?: boolean;
+  userTier?: string;
+  showUpgradePrompt?: boolean;
 }
 
-export default function ResultsDisplay({ analysis, onNewAnalysis, isPremium = false }: ResultsDisplayProps) {
+export default function ResultsDisplay({ 
+  analysis, 
+  results, 
+  onNewAnalysis = () => {}, 
+  isPremium = false, 
+  userTier = 'free',
+  showUpgradePrompt = false 
+}: ResultsDisplayProps) {
   const FREE_RESULTS_LIMIT = 3;
-  const visibleResults = isPremium ? analysis.results : analysis.results.slice(0, FREE_RESULTS_LIMIT);
-  const hiddenResultsCount = analysis.results.length - FREE_RESULTS_LIMIT;
+  const analysisResults = analysis?.results || results || [];
+  const visibleResults = isPremium ? analysisResults : analysisResults.slice(0, FREE_RESULTS_LIMIT);
+  const hiddenResultsCount = analysisResults.length - FREE_RESULTS_LIMIT;
   
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -81,7 +92,7 @@ export default function ResultsDisplay({ analysis, onNewAnalysis, isPremium = fa
       </div>
 
       {/* Critical Findings Alert */}
-      {analysis.critical_findings && analysis.critical_findings.length > 0 && (
+        {analysis?.critical_findings && analysis.critical_findings.length > 0 && (
         <div className="bg-red-100 border-l-4 border-red-500 p-4 shadow-md rounded-lg">
           <div className="flex items-center space-x-3 mb-3">
             <AlertTriangle className="h-6 w-6 text-red-700" />
@@ -99,7 +110,7 @@ export default function ResultsDisplay({ analysis, onNewAnalysis, isPremium = fa
       )}
 
       {/* Summary */}
-      {analysis.summary && (
+        {analysis?.summary && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">📋 Summary</h3>
           <p className="text-blue-800">{analysis.summary}</p>
@@ -211,7 +222,7 @@ export default function ResultsDisplay({ analysis, onNewAnalysis, isPremium = fa
       </div>
 
       {/* Recommendations */}
-      {analysis.recommendations && analysis.recommendations.length > 0 && (
+        {analysis?.recommendations && analysis.recommendations.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-green-900">💡 Recommendations</h3>
