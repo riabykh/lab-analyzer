@@ -6,10 +6,21 @@ import { Upload, FileText, Image, FileIcon, Loader2 } from 'lucide-react';
 
 interface FileUploadProps {
   onFileAnalyzed: (analysis: any) => void;
-  onError: (error: string) => void;
+  onError?: (error: string) => void;
+  isProcessing?: boolean;
+  setIsProcessing?: (processing: boolean) => void;
+  maxInsights?: number;
+  userTier?: string;
 }
 
-export default function FileUpload({ onFileAnalyzed, onError }: FileUploadProps) {
+export default function FileUpload({ 
+  onFileAnalyzed, 
+  onError = () => {},
+  isProcessing = false,
+  setIsProcessing = () => {},
+  maxInsights = 10,
+  userTier = 'free'
+}: FileUploadProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState('');
 
