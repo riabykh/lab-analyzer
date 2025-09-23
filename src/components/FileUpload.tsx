@@ -34,22 +34,11 @@ export default function FileUpload({
 
       setProgress('Extracting text...');
       
-      // Get session token from cookie for authentication
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('labwise_session='))
-        ?.split('=')[1];
-
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      console.log('Making request to /api/analyze with token:', token ? 'Present' : 'Missing');
+      // TEMPORARILY SKIP TOKEN - AUTHENTICATION BYPASSED
+      console.log('🧪 Making request to /api/analyze (auth bypassed for testing)');
       
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers,
         body: formData,
       });
 
