@@ -241,7 +241,6 @@ ${fileText.slice(0, 4000)}`,
         },
       ],
       max_completion_tokens: 3000,
-      temperature: 0.1,
       response_format: { type: "json_object" }
     });
 
