@@ -1,177 +1,118 @@
 # Privacy Policy
 
-**Effective Date:** [DATE]  
-**Last Updated:** [DATE]
+**Effective date:** 01 January 2025
 
-## Introduction
+**Last updated:** 01 January 2025
 
-Rialys ("we," "our," or "us") operates the LabWise service at labwise.rialys.eu. This Privacy Policy explains how we collect, use, and protect your information when you use our AI-powered lab results analysis service.
+## 1. Controller Information
 
-## Data Controller Information
+This Privacy Policy applies to the processing of personal data by **Mykyta Lysenko**, a sole proprietorship registered in Slovakia with its registered office at **93040 Štvrtok na Ostrove, Štvrtok na Ostrove 654**.
 
-**Company:** Rialys  
-**Address:** [YOUR EU ADDRESS]  
-**Email:** privacy@rialys.eu  
-**Data Protection Officer:** [DPO EMAIL]
+**Contact:** mykyta.lysenko@rialys.eu
 
-## Information We Collect
+**EU Representative:** Mykyta Lysenko / mykyta.lysenko@rialys.eu
 
-### 1. Account Information
-- Email address (for service delivery)
-- Payment information (processed by Paddle)
-- Service usage timestamps
+## 2. Data Collection and Processing
 
-### 2. Lab Results Data
-- **Processing Only:** We process your uploaded lab results to provide analysis
-- **No Storage:** Lab data is processed in real-time and immediately deleted
-- **Client-Side Processing:** File parsing occurs in your browser when possible
+We designed LabWise to minimize data collection and processing. Our core principle is local-only processing.
 
-### 3. Technical Information
-- IP address (for security and rate limiting)
-- Browser type and version
-- Device information
-- Usage analytics (anonymized)
+### 2.1 Local Processing
+- All laboratory data analysis occurs locally in your browser
+- Health data is not transmitted to our servers by default
+- Results are processed using client-side artificial intelligence
+- No personal health information is stored on our systems
 
-## How We Use Your Information
+### 2.2 Minimal Server Data
+We may process limited technical data for essential service operations:
+- IP addresses in transient server logs (retained ≤ 30 days)
+- Timestamp and user agent for security monitoring
+- Error logs for service debugging (anonymized)
 
-### Primary Purposes
-1. **Service Delivery:** Analyze your lab results using AI
-2. **Payment Processing:** Process subscriptions via Paddle
-3. **Security:** Prevent fraud and unauthorized access
-4. **Communication:** Send service-related emails only
+### 2.3 Third-Party Payment Processing
+If you purchase premium features:
+- Payment data is processed by independent third-party payment processors
+- We receive only operational status signals (e.g., "active subscription")
+- No financial or payment card data is stored on our systems
+- Payment processors act as independent data controllers
 
-### Legal Bases (GDPR)
-- **Consent:** For processing lab results data
-- **Contract Performance:** For service delivery
-- **Legitimate Interest:** For security and fraud prevention
+## 3. Lawful Basis for Processing
 
-## Data Processing and Storage
+Our processing is based on:
+- **Legitimate interests** for security monitoring and abuse prevention
+- **Contract performance** for providing paid services
+- **Legal obligation** for essential business records
 
-### Lab Results Processing
-- **Location:** EU data centers (Vercel EU regions)
-- **Duration:** Processed immediately, no persistent storage
-- **AI Processing:** OpenAI API with data processing agreements
-- **Encryption:** All data encrypted in transit (TLS 1.3)
+## 4. Data Retention
 
-### Account Data Storage
-- **Retention:** Deleted within 30 days of account closure
-- **Location:** EU data centers only
-- **Security:** Industry-standard encryption and access controls
+- Technical logs: Automatically deleted within 30 days
+- Session data: Cleared when you close your browser
+- Local storage: Under your control via browser settings
+- Payment status: Retained only while subscription is active
 
-## Third-Party Services
+## 5. International Data Transfers
 
-### OpenAI (AI Processing)
-- **Purpose:** Lab results analysis
-- **Data Shared:** Extracted text from lab results only
-- **Retention:** OpenAI deletes data within 30 days
-- **Location:** Compliant with EU data protection requirements
+Where we use infrastructure providers outside your jurisdiction, we implement appropriate safeguards including EU Standard Contractual Clauses. Health data remains on your device by design.
 
-### Paddle (Payment Processing)
-- **Purpose:** Subscription and payment management
-- **Data Shared:** Email, payment information
-- **Compliance:** PCI DSS compliant, GDPR compliant
+## 6. Your Rights Under GDPR
 
-### Vercel (Hosting)
-- **Purpose:** Application hosting and delivery
-- **Data Processing:** EU regions only
-- **Compliance:** GDPR compliant infrastructure
+You have the right to:
+- Access your personal data
+- Rectification of inaccurate data
+- Erasure of your data
+- Restriction of processing
+- Data portability
+- Object to processing
+- Withdraw consent (where applicable)
 
-## Your Rights
+To exercise these rights, contact: mykyta.lysenko@rialys.eu
 
-### Under GDPR (EU Users)
-- **Access:** Request copies of your personal data
-- **Rectification:** Correct inaccurate data
-- **Erasure:** Request deletion of your data
-- **Portability:** Receive your data in a portable format
-- **Restriction:** Limit processing of your data
-- **Objection:** Object to processing based on legitimate interests
-- **Withdraw Consent:** Withdraw consent at any time
+Note: As most data is processed locally on your device, many rights can be exercised directly through your browser settings.
 
-### Under CCPA (California Users)
-- **Right to Know:** What personal information we collect and how it's used
-- **Right to Delete:** Request deletion of personal information
-- **Right to Opt-Out:** Opt-out of sale of personal information (we don't sell data)
-- **Non-Discrimination:** Equal service regardless of privacy choices
+## 7. Cookies and Local Storage
 
-### Under Other Jurisdictions
-We extend similar rights to users in Canada (PIPEDA), Brazil (LGPD), Australia, and other jurisdictions as applicable.
+We use minimal browser storage:
+- Essential session cookies for service functionality
+- Local storage for user preferences (optional)
+- No tracking or analytics cookies
+- You can clear all local data via browser settings
 
-## Data Security
+## 8. Security Measures
 
-### Technical Measures
-- **Encryption:** AES-256 encryption at rest, TLS 1.3 in transit
-- **Access Controls:** Multi-factor authentication for all systems
-- **Network Security:** Firewalls, intrusion detection, DDoS protection
-- **Regular Audits:** Security assessments and penetration testing
+We implement appropriate technical and organizational measures:
+- Secure hosting infrastructure
+- Encrypted data transmission
+- Regular security updates
+- Least-privilege access controls
 
-### Organizational Measures
-- **Staff Training:** Regular privacy and security training
-- **Data Minimization:** Collect only necessary data
-- **Purpose Limitation:** Use data only for stated purposes
-- **Incident Response:** 72-hour breach notification procedures
+However, no system is completely secure. Keep your device and browser updated.
 
-## International Transfers
+## 9. Children's Privacy
 
-### EU-US Data Transfers
-- **Adequacy Decisions:** Transfer only to countries with adequacy decisions
-- **Standard Contractual Clauses:** EU Commission approved SCCs
-- **Binding Corporate Rules:** Internal data transfer protocols
+This service is intended for users aged 16 and above. We do not knowingly collect data from children under 16 without appropriate legal basis and parental consent.
 
-## Children's Privacy
+## 10. Data Sharing
 
-LabWise is not intended for users under 18 years of age. We do not knowingly collect personal information from children under 18. If we become aware of such collection, we will delete the information immediately.
+We do not sell, rent, or share personal data with third parties except:
+- As required by law
+- With your explicit consent
+- For essential service providers (under strict data processing agreements)
 
-## Medical Disclaimer
+## 11. Changes to This Policy
 
-### Important Notice
-- **Not Medical Advice:** Our service provides educational information only
-- **Professional Consultation:** Always consult healthcare professionals
-- **No Diagnosis:** We do not provide medical diagnoses or treatment recommendations
-- **Limitation of Liability:** We are not liable for medical decisions based on our analysis
+We may update this Privacy Policy to reflect legal, technical, or business changes. Material changes will be notified with reasonable advance notice. The effective date above indicates when this policy was last updated.
 
-## Cookie Policy
+## 12. Contact Information
 
-### Essential Cookies
-- **Authentication:** Secure login sessions
-- **Security:** CSRF protection, rate limiting
-- **Preferences:** Language and display settings
+For privacy-related questions or to exercise your rights:
 
-### Analytics Cookies (Optional)
-- **Usage Analytics:** Anonymized usage statistics
-- **Performance Monitoring:** Service reliability metrics
-- **User Control:** Opt-out available in settings
+**Mykyta Lysenko**
+93040 Štvrtok na Ostrove, Štvrtok na Ostrove 654
+Slovakia
 
-## Changes to This Policy
+Email: mykyta.lysenko@rialys.eu
 
-We may update this Privacy Policy periodically. We will:
-- **Notify Users:** Email notification of material changes
-- **Post Updates:** Updated policy on our website
-- **Effective Date:** Changes effective 30 days after notification
+## 13. Supervisory Authority
 
-## Contact Information
+You have the right to lodge a complaint with your local data protection supervisory authority if you believe your privacy rights have been violated.
 
-### Data Protection Inquiries
-**Email:** privacy@rialys.eu  
-**Response Time:** Within 72 hours
-
-### Supervisory Authority (EU)
-If you're unsatisfied with our response, you may contact your local data protection authority:
-- **Ireland:** Data Protection Commission (if EU operations based in Ireland)
-- **Your Country:** Local data protection authority
-
-### Legal Requests
-**Email:** legal@rialys.eu  
-**Address:** [LEGAL ADDRESS]
-
----
-
-**This policy complies with:**
-- EU General Data Protection Regulation (GDPR)
-- California Consumer Privacy Act (CCPA/CPRA)
-- Canada Personal Information Protection and Electronic Documents Act (PIPEDA)
-- Brazil Lei Geral de Proteção de Dados (LGPD)
-- Australia Privacy Act 1988
-- Singapore Personal Data Protection Act (PDPA)
-- Other applicable data protection laws
-
-**Last Updated:** [DATE]
+For Slovakia: Úrad na ochranu osobných údajov Slovenskej republiky
