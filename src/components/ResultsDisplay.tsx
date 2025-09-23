@@ -99,7 +99,7 @@ export default function ResultsDisplay({
             <h3 className="text-lg font-bold text-red-800">⚠️ Critical Findings</h3>
           </div>
           <ul className="list-disc pl-5 text-red-700 space-y-1">
-            {analysis.critical_findings.map((finding, idx) => (
+            {analysis?.critical_findings?.map((finding, idx) => (
               <li key={idx}>{finding}</li>
             ))}
           </ul>
@@ -229,19 +229,19 @@ export default function ResultsDisplay({
             {!isPremium && (analysis?.recommendations?.length || 0) > 2 && (
               <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                 <Lock className="h-3 w-3" />
-                <span>{analysis.recommendations.length - 2} more in Premium</span>
+                <span>{(analysis?.recommendations?.length || 0) - 2} more in Premium</span>
               </div>
             )}
           </div>
           <ul className="list-disc pl-5 text-green-800 space-y-2">
-            {(isPremium ? analysis.recommendations : analysis.recommendations.slice(0, 2)).map((recommendation, idx) => (
+            {(isPremium ? analysis?.recommendations : analysis?.recommendations?.slice(0, 2) || []).map((recommendation, idx) => (
               <li key={idx}>{recommendation}</li>
             ))}
           </ul>
-          {!isPremium && analysis.recommendations.length > 2 && (
+          {!isPremium && (analysis?.recommendations?.length || 0) > 2 && (
             <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-lg text-center">
               <p className="text-sm text-green-700 mb-2">
-                Get {analysis.recommendations.length - 2} more personalized recommendations with Premium
+                Get {(analysis?.recommendations?.length || 0) - 2} more personalized recommendations with Premium
               </p>
               <button className="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition-colors">
                 Upgrade Now
