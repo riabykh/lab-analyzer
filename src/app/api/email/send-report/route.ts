@@ -234,7 +234,7 @@ function generateEmailHTML(summary: {
             <a href="https://labwise.rialys.eu" style="color: #3b82f6; text-decoration: none;">labwise.rialys.eu</a>
           </p>
           <p style="margin: 16px 0 0 0; font-size: 12px;">
-            This email was sent to ${emailData.to}. If you didn't request this report, please ignore this email.
+            This email was sent to you. If you didn't request this report, please ignore this email.
           </p>
         </div>
       </div>
