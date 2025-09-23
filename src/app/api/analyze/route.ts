@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
       console.error('❌ OpenAI API key not configured');
       return NextResponse.json(
-        { error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' },
+        { 
+          error: 'Service configuration error. Please contact support.',
+          details: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.',
+          status: 'missing_api_key'
+        },
         { status: 500 }
       );
     }
@@ -49,27 +53,52 @@ export async function POST(request: NextRequest) {
       
       try {
         // First attempt: Extract text directly from PDF using pdf2json
+        console.log('🔄 Loading pdf2json module...');
         const PDFParser = (await import('pdf2json')).default;
+        console.log('✅ pdf2json loaded successfully');
         
         const extractedText = await new Promise<string>((resolve, reject) => {
           const pdfParser = new PDFParser();
           
+          // Add timeout to prevent hanging
+          const timeout = setTimeout(() => {
+            console.error('⏰ PDF parsing timeout');
+            reject(new Error('PDF parsing timeout'));
+          }, 30000); // 30 second timeout
+          
           pdfParser.on("pdfParser_dataError", (errData: any) => {
-            console.error('PDF parsing error:', errData.parserError);
-            reject(new Error('PDF parsing failed'));
+            clearTimeout(timeout);
+            console.error('❌ PDF parsing error:', errData);
+            reject(new Error(`PDF parsing failed: ${errData.parserError || 'Unknown error'}`));
           });
           
           pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
+            clearTimeout(timeout);
+            console.log('📋 PDF data ready, extracting text...');
+            
             try {
               let text = '';
+              let pageCount = 0;
+              let textElementCount = 0;
+              
               if (pdfData && pdfData.Pages) {
-                pdfData.Pages.forEach((page: any) => {
+                pageCount = pdfData.Pages.length;
+                console.log('📄 Processing', pageCount, 'pages');
+                
+                pdfData.Pages.forEach((page: any, pageIndex: number) => {
                   if (page.Texts) {
                     page.Texts.forEach((textElement: any) => {
+                      textElementCount++;
                       if (textElement.R) {
                         textElement.R.forEach((textRun: any) => {
                           if (textRun.T) {
-                            text += decodeURIComponent(textRun.T) + ' ';
+                            try {
+                              const decodedText = decodeURIComponent(textRun.T);
+                              text += decodedText + ' ';
+                            } catch (decodeError) {
+                              // If decoding fails, use raw text
+                              text += textRun.T + ' ';
+                            }
                           }
                         });
                       }
@@ -78,13 +107,28 @@ export async function POST(request: NextRequest) {
                   text += '\n';
                 });
               }
+              
+              console.log('📊 Text extraction stats:', {
+                pages: pageCount,
+                textElements: textElementCount,
+                extractedLength: text.length,
+                preview: text.slice(0, 100) + '...'
+              });
+              
               resolve(text.trim());
             } catch (parseError) {
+              console.error('❌ Text extraction error:', parseError);
               reject(parseError);
             }
           });
           
-          pdfParser.parseBuffer(Buffer.from(buffer));
+          console.log('🚀 Starting PDF parsing...');
+          try {
+            pdfParser.parseBuffer(Buffer.from(buffer));
+          } catch (bufferError) {
+            clearTimeout(timeout);
+            reject(new Error(`Failed to create PDF buffer: ${bufferError}`));
+          }
         });
         
         if (extractedText && extractedText.trim().length > 10) {
