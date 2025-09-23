@@ -1,144 +1,190 @@
 'use client';
 
-import { useState } from 'react';
-import { Stethoscope, AlertTriangle, Crown } from 'lucide-react';
-import FileUpload from '@/components/FileUpload';
-import ResultsDisplay from '@/components/ResultsDisplay';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Stethoscope, Zap, Crown, ArrowRight, CheckCircle, User } from 'lucide-react';
 
 export default function Home() {
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isPremium, setIsPremium] = useState<boolean>(false); // Default to free tier
+  const router = useRouter();
 
-  const handleFileAnalyzed = (newAnalysis: any) => {
-    setAnalysis(newAnalysis);
-    setError(null);
+  // Redirect to free flow for first-time users
+  const handleFreeAccess = async () => {
+    try {
+      // Create free session
+      const response = await fetch('/api/auth/free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'guest@free.user' })
+      });
+      
+      if (response.ok) {
+        router.push('/free');
+      } else {
+        alert('Failed to create free session. Please try again.');
+      }
+    } catch (error) {
+      console.error('Free access error:', error);
+      alert('Network error. Please try again.');
+    }
   };
 
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage);
-    setAnalysis(null);
-  };
-
-  const handleNewAnalysis = () => {
-    setAnalysis(null);
-    setError(null);
+  const handleUpgrade = () => {
+    router.push('/checkout');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Stethoscope className="h-8 w-8 text-blue-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Lab Results Analyzer</h1>
-                <p className="text-sm text-gray-600">AI-powered medical lab analysis</p>
+                <h1 className="text-2xl font-bold text-gray-900">LabWise</h1>
+                <p className="text-sm text-gray-600">AI-powered lab results analysis</p>
               </div>
-            </div>
-            
-            {/* Premium Toggle (for demo purposes) */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsPremium(!isPremium)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  isPremium
-                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Crown className="h-4 w-4" />
-                <span>{isPremium ? 'Premium Active' : 'Try Premium'}</span>
-              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-8 px-4">
-        {!analysis && !error && (
-          <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Upload Your Lab Results for AI Analysis
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Get instant, comprehensive analysis of your medical lab results. 
-                Upload PDF reports, images, or text files for detailed insights.
-              </p>
-            </div>
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto py-16 px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Transform Your Lab Results into
+            <span className="text-blue-600"> Clear Insights</span>
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Get instant, AI-powered analysis of your medical lab results. 
+            Upload your reports and receive detailed explanations, interpretations, and actionable recommendations.
+          </p>
+        </div>
 
-            {/* Features */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <Stethoscope className="h-6 w-6 text-blue-600" />
+        {/* Pricing Options */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+          {/* Free Tier */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 relative">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Try Free</h3>
+              <p className="text-gray-600 mb-6">Get started with basic analysis</p>
+              
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="text-gray-700">3 analyses per session</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-                <p className="text-gray-600">Advanced ChatGPT analysis of your lab results with detailed interpretations.</p>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="text-gray-700">Basic interpretations</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="text-gray-700">PDF export</span>
+                </div>
               </div>
               
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">🔒</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Private & Secure</h3>
-                <p className="text-gray-600">Your data is processed securely and never stored on our servers.</p>
-              </div>
-              
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">📄</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Multiple Formats</h3>
-                <p className="text-gray-600">Support for PDF, images (PNG/JPG), and text files.</p>
-              </div>
-            </div>
-
-            {/* File Upload */}
-            <FileUpload onFileAnalyzed={handleFileAnalyzed} onError={handleError} />
-          </div>
-        )}
-
-        {/* Error Display */}
-        {error && (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-                <h3 className="text-lg font-semibold text-red-800">Analysis Error</h3>
-              </div>
-              <p className="text-red-700 mb-4">{error}</p>
               <button
-                onClick={handleNewAnalysis}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                onClick={handleFreeAccess}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
-                Try Again
+                <span>Start Free Analysis</span>
+                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
           </div>
-        )}
 
-        {/* Results Display */}
-        {analysis && (
-          <ResultsDisplay 
-            analysis={analysis} 
-            onNewAnalysis={handleNewAnalysis} 
-            isPremium={isPremium}
-          />
-        )}
+          {/* Premium Tier */}
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl shadow-xl p-8 relative text-white">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <div className="bg-yellow-500 text-yellow-900 px-4 py-1 rounded-full text-sm font-semibold">
+                Most Popular
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Premium</h3>
+              <p className="text-yellow-100 mb-6">Unlimited comprehensive analysis</p>
+              
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Unlimited analyses</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Detailed recommendations</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Analysis history</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Email reports</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Priority support</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleUpgrade}
+                className="w-full bg-white text-yellow-600 py-3 px-6 rounded-lg font-semibold hover:bg-yellow-50 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Upgrade to Premium</span>
+                <Crown className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Stethoscope className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
+            <p className="text-gray-600">Advanced ChatGPT-4 analysis with medical knowledge base for accurate interpretations.</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🔒</span>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Privacy First</h3>
+            <p className="text-gray-600">Zero data storage policy. Your medical information is processed and immediately discarded.</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Zap className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Instant Results</h3>
+            <p className="text-gray-600">Get comprehensive analysis within seconds. Multiple file formats supported.</p>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-sm text-gray-600">
-            <p>© 2025 Lab Results Analyzer. For educational purposes only.</p>
-            <p className="mt-1">Not a substitute for professional medical advice.</p>
+            <p>© 2025 LabWise. For educational purposes only.</p>
+            <p className="mt-1">Not a substitute for professional medical advice. Always consult your healthcare provider.</p>
+            <div className="mt-4 space-x-6">
+              <a href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</a>
+              <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+            </div>
           </div>
         </div>
       </footer>
