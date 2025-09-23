@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 24 * 60 * 60, // 24 hours
-      domain: '.labwise.rialys.eu',
       path: '/'
+      // No domain restriction - works on any domain (Railway or custom)
     });
 
     return response;
