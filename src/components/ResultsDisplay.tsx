@@ -113,7 +113,7 @@ export default function ResultsDisplay({
         {analysis?.summary && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">📋 Summary</h3>
-          <p className="text-blue-800">{analysis.summary}</p>
+          <p className="text-blue-800">{analysis?.summary}</p>
         </div>
       )}
 
@@ -226,7 +226,7 @@ export default function ResultsDisplay({
         <div className="bg-green-50 border border-green-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-green-900">💡 Recommendations</h3>
-            {!isPremium && analysis.recommendations.length > 2 && (
+            {!isPremium && (analysis?.recommendations?.length || 0) > 2 && (
               <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                 <Lock className="h-3 w-3" />
                 <span>{analysis.recommendations.length - 2} more in Premium</span>
