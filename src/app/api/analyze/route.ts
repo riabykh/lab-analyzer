@@ -6,19 +6,32 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: NextRequest) {
+  console.log('🔍 Analysis request received');
+  console.log('Headers:', Object.fromEntries(request.headers.entries()));
+  
   try {
     // Check if API key is configured
     if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OpenAI API key not configured');
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' },
         { status: 500 }
       );
     }
+    
+    console.log('✅ OpenAI API key configured');
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    
+    console.log('📎 File received:', {
+      name: file?.name,
+      type: file?.type,
+      size: file?.size
+    });
 
     if (!file) {
+      console.error('❌ No file provided in formData');
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }

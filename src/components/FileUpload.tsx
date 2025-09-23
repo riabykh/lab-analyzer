@@ -45,19 +45,26 @@ export default function FileUpload({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      console.log('Making request to /api/analyze with token:', token ? 'Present' : 'Missing');
+      
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers,
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Analysis failed');
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || `Analysis failed (${response.status})`);
       }
 
       setProgress('Analyzing results...');
       const data = await response.json();
+      console.log('Analysis response:', data);
 
       if (data.success) {
         onFileAnalyzed(data.analysis);
