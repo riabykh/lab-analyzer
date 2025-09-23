@@ -192,8 +192,7 @@ export default function Home() {
             <p>© 2025 LabWise. For educational purposes only.</p>
             <p className="mt-1">Not a substitute for professional medical advice. Always consult your healthcare provider.</p>
             <div className="mt-4 space-x-6">
-              <a href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</a>
-              <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+              <a href="/legal" className="hover:text-blue-600 transition-colors">Terms & Privacy Policy</a>
             </div>
           </div>
         </div>
