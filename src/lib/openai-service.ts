@@ -300,6 +300,6 @@ If no medical data is found, return:
 }
 
 Document to analyze:
-${truncatedText}`;
+${text}`;
   }
 }
