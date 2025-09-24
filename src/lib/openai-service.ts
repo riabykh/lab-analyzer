@@ -107,6 +107,53 @@ export class ModernOpenAIService {
     }
   }
 
+  async analyzeImage(imageData: string, mimeType: string): Promise<string> {
+    const timer = logger.time('OpenAI Image OCR');
+    
+    try {
+      logger.info('Starting image OCR analysis', {
+        mimeType,
+        dataLength: imageData.length
+      });
+
+      const ocrResponse = await this.openai.chat.completions.create({
+        model: 'gpt-4o-2024-11-20', // Use vision-capable model
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Extract all text from this image, especially lab test results. Return only the extracted text.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mimeType};base64,${imageData}`,
+                },
+              },
+            ],
+          },
+        ],
+        max_completion_tokens: 2000,
+      });
+
+      const extractedText = ocrResponse.choices[0]?.message?.content || '';
+      
+      logger.info('Image OCR completed', {
+        extractedLength: extractedText.length
+      });
+
+      timer.end();
+      return extractedText;
+
+    } catch (error) {
+      timer.end();
+      logger.error('Image OCR failed', error);
+      throw error;
+    }
+  }
+
   private parseAndValidateResponse(content: string): AnalysisResult {
     try {
       // Clean the response (remove markdown code blocks)

@@ -6,7 +6,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('AnalyzeAPI');
 
 export async function POST(request: NextRequest) {
-  const requestId = crypto.randomUUID();
+  const requestId = Math.random().toString(36).substring(2) + Date.now().toString(36);
   logger.info('Analysis request received', { 
     requestId,
     userAgent: request.headers.get('user-agent'),
@@ -92,29 +92,7 @@ export async function POST(request: NextRequest) {
       const base64 = Buffer.from(buffer).toString('base64');
       
       try {
-        const ocrResponse = await openaiService.openai.chat.completions.create({
-          model: 'gpt-4o-2024-11-20', // Use vision-capable model
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Extract all text from this image, especially lab test results. Return only the extracted text.'
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${file.type};base64,${base64}`,
-                  },
-                },
-              ],
-            },
-          ],
-          max_completion_tokens: 2000,
-        });
-        
-        fileText = ocrResponse.choices[0]?.message?.content || '';
+        fileText = await openaiService.analyzeImage(base64, file.type);
         logger.fileProcessing(file.name, file.size, 'image-ocr-completed');
       } catch (ocrError) {
         logger.error('Image OCR failed', { requestId, error: ocrError });
