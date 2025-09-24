@@ -79,6 +79,7 @@ export default function FileUpload({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
+      'application/pdf': ['.pdf'],
       'image/*': ['.png', '.jpg', '.jpeg'],
       'text/plain': ['.txt'],
     },
@@ -119,18 +120,22 @@ export default function FileUpload({
                 {isDragActive ? 'Drop your file here' : 'Upload lab results'}
               </p>
               <p className="text-sm text-gray-600 mt-1 px-2">
-                Drag & drop or click to select image or text file
+                Drag & drop or click to select PDF, image, or text file
               </p>
             </div>
             
             <div className="flex justify-center space-x-3 sm:space-x-4 text-xs text-gray-500">
               <div className="flex items-center space-x-1">
+                <FileIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>PDF</span>
+              </div>
+              <div className="flex items-center space-x-1">
                 <Image className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Images (PNG, JPG)</span>
+                <span>Images</span>
               </div>
               <div className="flex items-center space-x-1">
                 <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Text Files</span>
+                <span>Text</span>
               </div>
             </div>
           </div>

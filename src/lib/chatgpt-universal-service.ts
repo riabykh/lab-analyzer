@@ -72,14 +72,9 @@ export class ChatGPTUniversalService {
         analysisResult = await this.analyzeTextContent(text, requestId);
         
       } else if (file.type === 'application/pdf') {
-        // Note: ChatGPT Vision API doesn't directly support PDFs
-        // For best results with PDFs containing lab results:
-        throw new Error(
-          'For PDF analysis, please either:\n' +
-          '1. Convert your PDF to an image (PNG/JPG) for our AI Vision analysis, or\n' +
-          '2. Copy the text from your PDF and upload as a text file (.txt)\n\n' +
-          'This ensures the most accurate analysis of your lab results!'
-        );
+        // Handle PDFs using OpenAI's native file upload and analysis
+        const buffer = await file.arrayBuffer();
+        analysisResult = await this.analyzePDFWithChatGPT(buffer, file.name, requestId);
         
       } else if (file.type.startsWith('image/')) {
         // Handle images using Vision API
@@ -109,6 +104,112 @@ export class ChatGPTUniversalService {
     }
   }
 
+  /**
+   * Analyze PDF using OpenAI's native file upload and ChatGPT
+   */
+  private async analyzePDFWithChatGPT(buffer: ArrayBuffer, fileName: string, requestId: string): Promise<AnalysisResponse> {
+    const timer = logger.time('PDF ChatGPT Analysis');
+    
+    try {
+      logger.info('Starting PDF analysis with ChatGPT native file upload', { 
+        requestId, 
+        fileName,
+        fileSize: buffer.byteLength 
+      });
+
+      // Step 1: Upload file to OpenAI
+      const fileBlob = new Blob([buffer], { type: 'application/pdf' });
+      const uploadFile = new File([fileBlob], fileName, { type: 'application/pdf' });
+      
+      const uploadedFile = await this.openai.files.create({
+        file: uploadFile,
+        purpose: 'assistants'
+      });
+
+      logger.info('PDF uploaded to OpenAI', { 
+        requestId, 
+        fileId: uploadedFile.id 
+      });
+
+      // Step 2: Create assistant for medical analysis
+      const assistant = await this.openai.beta.assistants.create({
+        name: "Lab Results Analyzer",
+        instructions: this.getPDFAnalysisSystemPrompt(),
+        model: this.config.model!,
+        tools: [{ type: "file_search" }]
+      });
+
+      // Step 3: Create thread and attach file
+      const thread = await this.openai.beta.threads.create({
+        messages: [
+          {
+            role: "user",
+            content: this.getPDFAnalysisUserPrompt(),
+            attachments: [
+              {
+                file_id: uploadedFile.id,
+                tools: [{ type: "file_search" }]
+              }
+            ]
+          }
+        ]
+      });
+
+      // Step 4: Run the assistant
+      const run = await this.openai.beta.threads.runs.create(thread.id, {
+        assistant_id: assistant.id
+      });
+
+      // Step 5: Wait for completion
+      let runResult = await this.openai.beta.threads.runs.retrieve(run.id, { thread_id: thread.id });
+      while (runResult.status === 'queued' || runResult.status === 'in_progress') {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        runResult = await this.openai.beta.threads.runs.retrieve(run.id, { thread_id: thread.id });
+      }
+
+      if (runResult.status !== 'completed') {
+        throw new Error(`Assistant run failed with status: ${runResult.status}`);
+      }
+
+      // Step 6: Get the response
+      const messages = await this.openai.beta.threads.messages.list(thread.id);
+      const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
+      
+      if (!assistantMessage || !assistantMessage.content[0] || assistantMessage.content[0].type !== 'text') {
+        throw new Error('No valid response from PDF analysis');
+      }
+
+      const responseText = assistantMessage.content[0].text.value;
+
+      // Step 7: Clean up
+      try {
+        await this.openai.files.delete(uploadedFile.id);
+        await this.openai.beta.assistants.delete(assistant.id);
+      } catch (cleanupError) {
+        logger.warn('Cleanup warning', { requestId, error: cleanupError });
+      }
+
+      // Step 8: Parse and validate response
+      const analysis = this.parseAndValidateResponse(responseText);
+      
+      logger.info('PDF ChatGPT analysis completed', {
+        requestId,
+        resultsCount: analysis.results.length,
+        fileId: uploadedFile.id
+      });
+
+      timer.end();
+      return analysis;
+
+    } catch (error) {
+      timer.end();
+      logger.error('PDF ChatGPT analysis failed', error instanceof Error ? error : { error: String(error) });
+      throw new Error(
+        `PDF analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}. ` +
+        'Please ensure your PDF contains readable text and try again.'
+      );
+    }
+  }
 
   /**
    * Analyze text content directly
@@ -355,6 +456,65 @@ RETURN ONLY valid JSON in the specified format. No additional text or explanatio
     }
     
     return result + '\n[Content truncated to preserve medical information...]';
+  }
+
+  private getPDFAnalysisSystemPrompt(): string {
+    return `You are an expert medical lab results analyzer specializing in interpreting laboratory tests, medical measurements, and health data from PDF documents.
+
+Your task is to:
+1. Read and extract ALL medical content from the uploaded PDF document
+2. Identify medical measurements, lab values, and health data
+3. Interpret each result in plain language
+4. Identify any critical or concerning findings
+5. Provide actionable health recommendations
+
+IMPORTANT: You MUST respond with valid JSON only. No additional text, explanations, or markdown formatting.
+
+Output format:
+{
+  "results": [
+    {
+      "test_name": "Name of the test or measurement",
+      "value": "The measured value",
+      "unit": "Unit of measurement (if available)",
+      "reference_range": "Normal range (if mentioned)",
+      "status": "normal|high|low|unknown",
+      "interpretation": "Plain language explanation"
+    }
+  ],
+  "critical_findings": ["Any concerning values or urgent attention needed"],
+  "summary": "Overall summary of findings from the PDF",
+  "recommendations": ["Actionable health recommendations"]
+}
+
+Be thorough in reading the PDF document and accurate in your medical interpretations. Extract ALL medical measurements and lab values found in the document.`;
+  }
+
+  private getPDFAnalysisUserPrompt(): string {
+    return `Please analyze the uploaded PDF document containing medical/laboratory information:
+
+1. READ ALL CONTENT from the PDF document thoroughly
+2. EXTRACT every medical measurement, lab result, vital sign, and health data point
+3. INTERPRET findings and provide medical insights
+4. IDENTIFY any critical or concerning values
+
+Focus on:
+- Laboratory test names and results
+- Medical measurements with units (mg/dL, mmol/L, etc.)
+- Reference ranges and normal values
+- Patient information and test dates
+- Any abnormal or critical findings
+- Vital signs and health measurements
+
+RETURN ONLY valid JSON in the specified format. No additional text or explanations outside the JSON structure.
+
+If no medical data is found, return:
+{
+  "results": [],
+  "critical_findings": [],
+  "summary": "No medical measurements or laboratory results found in the PDF document",
+  "recommendations": ["Please ensure the document contains laboratory results or medical measurements"]
+}`;
   }
 
   private parseAndValidateResponse(content: string): AnalysisResponse {
