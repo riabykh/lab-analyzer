@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ModernPDFProcessor } from '@/lib/pdf-processor';
-import { PDFVisionProcessor } from '@/lib/pdf-vision-processor';
-import { ModernOpenAIService } from '@/lib/openai-service';
+import { ChatGPTUniversalService } from '@/lib/chatgpt-universal-service';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('AnalyzeAPI');
@@ -28,16 +26,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize modern services
-    const pdfProcessor = ModernPDFProcessor.getInstance();
-    const pdfVisionProcessor = PDFVisionProcessor.getInstance();
-    const openaiService = new ModernOpenAIService({
+    // Initialize ChatGPT Universal Service
+    const chatgptService = new ChatGPTUniversalService({
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL || 'gpt-4o-2024-11-20',
-      maxTokens: 8000 // Increased for better results
+      maxTokens: 8000
     });
 
-    logger.info('Services initialized', { requestId });
+    logger.info('ChatGPT Universal Service initialized', { requestId });
 
     // Extract file from form data
     const formData = await request.formData();
@@ -51,124 +47,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.fileProcessing(file.name, file.size, 'received');
-
-    // Validate file
-    if (file.type === 'application/pdf') {
-      const validation = pdfProcessor.validatePDF(file);
-      if (!validation.valid) {
-        logger.error('PDF validation failed', { 
-          requestId, 
-          fileName: file.name, 
-          error: validation.error 
-        });
-        return NextResponse.json(
-          { error: validation.error, requestId },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Extract text from file using modern services
-    let fileText = '';
-    
-    if (file.type === 'text/plain') {
-      fileText = await file.text();
-      logger.fileProcessing(file.name, file.size, 'text-extracted');
-    } else if (file.type === 'application/pdf') {
-      const buffer = await file.arrayBuffer();
-      
-      // Use enhanced PDF Vision processing for better results
-      try {
-        const pdfVisionResult = await pdfVisionProcessor.processWithVision(buffer, openaiService);
-        fileText = pdfVisionResult.text;
-        
-        logger.info('PDF Vision processing completed', {
-          requestId,
-          fileName: file.name,
-          pages: pdfVisionResult.metadata.pages,
-          textLength: pdfVisionResult.metadata.textLength,
-          method: pdfVisionResult.metadata.method,
-          images: pdfVisionResult.metadata.images
-        });
-      } catch (visionError) {
-        logger.warn('PDF Vision processing failed, falling back to regular extraction', { 
-          requestId, 
-          error: visionError 
-        });
-        
-        // Fallback to regular PDF processing
-        const pdfResult = await pdfProcessor.extractText(buffer);
-        fileText = pdfResult.text;
-        
-        logger.info('PDF fallback processing completed', {
-          requestId,
-          fileName: file.name,
-          pages: pdfResult.metadata.pages,
-          textLength: pdfResult.metadata.textLength,
-          method: pdfResult.metadata.method
-        });
-      }
-    } else if (file.type.startsWith('image/')) {
-      // Use OpenAI Vision API for image OCR
-      logger.fileProcessing(file.name, file.size, 'image-ocr-started');
-      const buffer = await file.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      
-      try {
-        fileText = await openaiService.analyzeImage(base64, file.type);
-        logger.fileProcessing(file.name, file.size, 'image-ocr-completed');
-      } catch (ocrError) {
-        logger.error('Image OCR failed', { requestId, error: ocrError });
-        return NextResponse.json(
-          { 
-            error: 'Failed to process image', 
-            details: ocrError instanceof Error ? ocrError.message : 'Unknown OCR error',
-            requestId 
-          },
-          { status: 400 }
-        );
-      }
-    } else {
-      logger.error('Unsupported file type', { 
-        requestId, 
-        fileName: file.name, 
-        fileType: file.type 
-      });
-      return NextResponse.json(
-        { 
-          error: 'Unsupported file type', 
-          details: 'Please upload PDF, image, or text file',
-          requestId 
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!fileText.trim()) {
-      logger.error('No text extracted from file', { requestId, fileName: file.name });
-      return NextResponse.json(
-        { 
-          error: 'No text could be extracted from the file',
-          requestId 
-        },
-        { status: 400 }
-      );
-    }
-
-    logger.info('Text extraction completed', {
+    logger.info('File received for processing', {
       requestId,
-      textLength: fileText.length,
-      preview: fileText.slice(0, 200) + '...'
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
     });
 
-    // Perform AI analysis using modern service
-    const analysis = await openaiService.analyzeLabResults(fileText);
+    // Validate file size (max 25MB for vision processing)
+    const maxSize = 25 * 1024 * 1024; // 25MB
+    if (file.size > maxSize) {
+      logger.error('File too large', { requestId, fileSize: file.size, maxSize });
+      return NextResponse.json(
+        { 
+          error: 'File too large', 
+          details: `Maximum file size is ${maxSize / 1024 / 1024}MB`,
+          requestId 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Process file using ChatGPT Universal Service
+    const analysis = await chatgptService.processFile(file);
 
     // Return successful response
     logger.info('Analysis completed successfully', { 
       requestId,
       resultsCount: analysis.results.length,
+      criticalFindings: analysis.critical_findings.length,
       fileName: file.name
     });
 
@@ -179,8 +86,9 @@ export async function POST(request: NextRequest) {
         requestId,
         fileName: file.name,
         fileSize: file.size,
-        textLength: fileText.length,
-        processingTime: new Date().toISOString()
+        fileType: file.type,
+        processingTime: new Date().toISOString(),
+        processor: 'ChatGPT Universal Service'
       }
     });
 
