@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ModernPDFProcessor } from '@/lib/pdf-processor';
+import { PDFVisionProcessor } from '@/lib/pdf-vision-processor';
 import { ModernOpenAIService } from '@/lib/openai-service';
 import { createLogger } from '@/lib/logger';
 
@@ -29,10 +30,11 @@ export async function POST(request: NextRequest) {
 
     // Initialize modern services
     const pdfProcessor = ModernPDFProcessor.getInstance();
+    const pdfVisionProcessor = PDFVisionProcessor.getInstance();
     const openaiService = new ModernOpenAIService({
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL || 'gpt-4o-2024-11-20',
-      maxTokens: 3000
+      maxTokens: 8000 // Increased for better results
     });
 
     logger.info('Services initialized', { requestId });
@@ -75,16 +77,38 @@ export async function POST(request: NextRequest) {
       logger.fileProcessing(file.name, file.size, 'text-extracted');
     } else if (file.type === 'application/pdf') {
       const buffer = await file.arrayBuffer();
-      const pdfResult = await pdfProcessor.extractText(buffer);
-      fileText = pdfResult.text;
       
-      logger.info('PDF processing completed', {
-        requestId,
-        fileName: file.name,
-        pages: pdfResult.metadata.pages,
-        textLength: pdfResult.metadata.textLength,
-        method: pdfResult.metadata.method
-      });
+      // Use enhanced PDF Vision processing for better results
+      try {
+        const pdfVisionResult = await pdfVisionProcessor.processWithVision(buffer, openaiService);
+        fileText = pdfVisionResult.text;
+        
+        logger.info('PDF Vision processing completed', {
+          requestId,
+          fileName: file.name,
+          pages: pdfVisionResult.metadata.pages,
+          textLength: pdfVisionResult.metadata.textLength,
+          method: pdfVisionResult.metadata.method,
+          images: pdfVisionResult.metadata.images
+        });
+      } catch (visionError) {
+        logger.warn('PDF Vision processing failed, falling back to regular extraction', { 
+          requestId, 
+          error: visionError 
+        });
+        
+        // Fallback to regular PDF processing
+        const pdfResult = await pdfProcessor.extractText(buffer);
+        fileText = pdfResult.text;
+        
+        logger.info('PDF fallback processing completed', {
+          requestId,
+          fileName: file.name,
+          pages: pdfResult.metadata.pages,
+          textLength: pdfResult.metadata.textLength,
+          method: pdfResult.metadata.method
+        });
+      }
     } else if (file.type.startsWith('image/')) {
       // Use OpenAI Vision API for image OCR
       logger.fileProcessing(file.name, file.size, 'image-ocr-started');

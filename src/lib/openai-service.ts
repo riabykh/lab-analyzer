@@ -53,6 +53,23 @@ export class ModernOpenAIService {
         model: this.config.model
       });
 
+      // Check if text is too long and chunk if necessary
+      const maxTextLength = 8000; // Conservative limit for context
+      let processedText = text;
+      
+      if (text.length > maxTextLength) {
+        logger.warn('Text too long, truncating for analysis', {
+          originalLength: text.length,
+          truncatedLength: maxTextLength
+        });
+        
+        // Intelligent truncation - try to keep medical terms at the beginning
+        processedText = this.intelligentTruncate(text, maxTextLength);
+      }
+
+      // Increase token limit for better results
+      const adaptiveTokenLimit = Math.min(8000, Math.max(3000, Math.floor(processedText.length / 2)));
+
       // Modern streaming approach with error handling
       const completion = await this.openai.chat.completions.create({
         model: this.config.model,
@@ -63,10 +80,10 @@ export class ModernOpenAIService {
           },
           {
             role: 'user',
-            content: this.getUserPrompt(text)
+            content: this.getUserPrompt(processedText)
           }
         ],
-        max_completion_tokens: this.config.maxTokens,
+        max_completion_tokens: adaptiveTokenLimit,
         response_format: { type: "json_object" },
         // Remove temperature for GPT-5 compatibility
         ...(this.config.temperature && !this.config.model.includes('gpt-5') && {
@@ -120,11 +137,22 @@ export class ModernOpenAIService {
         model: 'gpt-4o-2024-11-20', // Use vision-capable model
         messages: [
           {
+            role: 'system',
+            content: 'You are an expert OCR system specialized in medical documents and lab results. Extract all text accurately, preserving medical terminology, numbers, units, and structure.'
+          },
+          {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Extract all text from this image, especially lab test results. Return only the extracted text.'
+                text: `Please extract ALL text from this ${mimeType.includes('pdf') ? 'PDF document' : 'image'}, especially focusing on:
+- Lab test names and results
+- Medical measurements with units (mg/dL, mmol/L, etc.)
+- Reference ranges and normal values
+- Patient information and test dates
+- Any medical terminology or clinical notes
+
+Preserve the original structure and formatting. Return the complete extracted text.`
               },
               {
                 type: 'image_url',
@@ -135,7 +163,7 @@ export class ModernOpenAIService {
             ],
           },
         ],
-        max_completion_tokens: 2000,
+        max_completion_tokens: 4000, // Increased for better OCR results
       });
 
       const extractedText = ocrResponse.choices[0]?.message?.content || '';
@@ -205,13 +233,45 @@ CRITICAL REQUIREMENTS:
 Your analysis should be thorough, accurate, and clinically relevant.`;
   }
 
-  private getUserPrompt(text: string): string {
-    // Truncate text if too long to avoid token limits
-    const maxTextLength = 4000;
-    const truncatedText = text.length > maxTextLength 
-      ? text.slice(0, maxTextLength) + '\n[Text truncated...]'
-      : text;
+  private intelligentTruncate(text: string, maxLength: number): string {
+    // Try to preserve medical terms and lab values at the beginning
+    const medicalKeywords = [
+      'lab', 'test', 'result', 'blood', 'glucose', 'cholesterol', 'hemoglobin',
+      'CBC', 'metabolic', 'panel', 'mg/dL', 'mmol/L', 'normal', 'high', 'low',
+      'reference', 'range', 'abnormal', 'critical', 'value'
+    ];
+    
+    if (text.length <= maxLength) return text;
+    
+    // Look for sections that contain medical keywords
+    const sentences = text.split(/[.!?]\s+/);
+    let result = '';
+    let length = 0;
+    
+    // First pass: add sentences with medical keywords
+    for (const sentence of sentences) {
+      const hasKeyword = medicalKeywords.some(keyword => 
+        sentence.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      if (hasKeyword && length + sentence.length < maxLength - 100) {
+        result += sentence + '. ';
+        length += sentence.length + 2;
+      }
+    }
+    
+    // Second pass: fill remaining space with other sentences
+    for (const sentence of sentences) {
+      if (!result.includes(sentence) && length + sentence.length < maxLength - 50) {
+        result += sentence + '. ';
+        length += sentence.length + 2;
+      }
+    }
+    
+    return result + '\n[Text intelligently truncated to preserve medical content...]';
+  }
 
+  private getUserPrompt(text: string): string {
     return `Analyze this medical document and extract ALL lab results, medical measurements, or health data:
 
 RETURN ONLY this JSON structure:
