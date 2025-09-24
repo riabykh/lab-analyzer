@@ -60,7 +60,7 @@ export class ModernPDFProcessor {
 
     } catch (error) {
       timer.end();
-      logger.error('PDF extraction failed', error);
+      logger.error('PDF extraction failed', error instanceof Error ? error : { error: String(error) });
       
       // Fallback: Return error with suggestion
       throw new Error(

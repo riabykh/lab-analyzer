@@ -119,7 +119,7 @@ export class ModernOpenAIService {
 
     } catch (error) {
       timer.end();
-      logger.error('OpenAI analysis failed', error);
+      logger.error('OpenAI analysis failed', error instanceof Error ? error : { error: String(error) });
       throw error;
     }
   }
@@ -177,7 +177,7 @@ Preserve the original structure and formatting. Return the complete extracted te
 
     } catch (error) {
       timer.end();
-      logger.error('Image OCR failed', error);
+      logger.error('Image OCR failed', error instanceof Error ? error : { error: String(error) });
       throw error;
     }
   }

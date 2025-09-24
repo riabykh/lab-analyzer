@@ -98,7 +98,7 @@ export class PDFVisionProcessor {
 
     } catch (error) {
       timer.end();
-      logger.error('PDF Vision processing failed', error);
+      logger.error('PDF Vision processing failed', error instanceof Error ? error : { error: String(error) });
       throw new Error(
         `PDF Vision processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
