@@ -118,11 +118,24 @@ export class ChatGPTUniversalService {
       });
 
       // Step 1: Upload file to OpenAI
-      const fileBlob = new Blob([buffer], { type: 'application/pdf' });
-      const uploadFile = new File([fileBlob], fileName, { type: 'application/pdf' });
+      // Convert ArrayBuffer to Buffer for Node.js environment
+      const fileBuffer = Buffer.from(buffer);
+      
+      // Create a file-like object that OpenAI SDK expects
+      // Use a simple approach that works in Node.js environment
+      const fileToUpload = {
+        name: fileName,
+        type: 'application/pdf',
+        size: fileBuffer.length,
+        stream: () => {
+          const { Readable } = require('stream');
+          return Readable.from(fileBuffer);
+        },
+        [Symbol.toStringTag]: 'File'
+      };
       
       const uploadedFile = await this.openai.files.create({
-        file: uploadFile,
+        file: fileToUpload as any,
         purpose: 'assistants'
       });
 
