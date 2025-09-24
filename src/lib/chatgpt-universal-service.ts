@@ -71,8 +71,18 @@ export class ChatGPTUniversalService {
         const text = await file.text();
         analysisResult = await this.analyzeTextContent(text, requestId);
         
-      } else if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
-        // Handle PDFs and images using Vision API
+      } else if (file.type === 'application/pdf') {
+        // Note: ChatGPT Vision API doesn't directly support PDFs
+        // For best results with PDFs containing lab results:
+        throw new Error(
+          'For PDF analysis, please either:\n' +
+          '1. Convert your PDF to an image (PNG/JPG) for our AI Vision analysis, or\n' +
+          '2. Copy the text from your PDF and upload as a text file (.txt)\n\n' +
+          'This ensures the most accurate analysis of your lab results!'
+        );
+        
+      } else if (file.type.startsWith('image/')) {
+        // Handle images using Vision API
         const buffer = await file.arrayBuffer();
         const base64Data = Buffer.from(buffer).toString('base64');
         const mimeType = file.type;
@@ -80,7 +90,7 @@ export class ChatGPTUniversalService {
         analysisResult = await this.analyzeFileWithVision(base64Data, mimeType, requestId);
         
       } else {
-        throw new Error(`Unsupported file type: ${file.type}. Please upload PDF, image, or text file.`);
+        throw new Error(`Unsupported file type: ${file.type}. Please upload an image (PNG, JPG) or text file.`);
       }
 
       logger.info('Universal file processing completed', {
@@ -98,6 +108,7 @@ export class ChatGPTUniversalService {
       throw error;
     }
   }
+
 
   /**
    * Analyze text content directly
