@@ -121,23 +121,27 @@ export class ChatGPTUniversalService {
       // Convert ArrayBuffer to Buffer for Node.js environment
       const fileBuffer = Buffer.from(buffer);
       
-      // Create a file-like object that OpenAI SDK expects
-      // Use a simple approach that works in Node.js environment
-      const fileToUpload = {
-        name: fileName,
-        type: 'application/pdf',
-        size: fileBuffer.length,
-        stream: () => {
-          const { Readable } = require('stream');
-          return Readable.from(fileBuffer);
-        },
-        [Symbol.toStringTag]: 'File'
-      };
+      // Create a proper FormData with the file
+      const formData = new FormData();
+      const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+      formData.append('file', blob, fileName);
+      formData.append('purpose', 'assistants');
       
-      const uploadedFile = await this.openai.files.create({
-        file: fileToUpload as any,
-        purpose: 'assistants'
+      // Upload using fetch directly to ensure compatibility
+      const uploadResponse = await fetch('https://api.openai.com/v1/files', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+        },
+        body: formData
       });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`File upload failed: ${uploadResponse.status} - ${errorText}`);
+      }
+      
+      const uploadedFile = await uploadResponse.json();
 
       logger.info('PDF uploaded to OpenAI', { 
         requestId, 
