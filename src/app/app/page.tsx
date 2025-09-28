@@ -16,8 +16,11 @@ export default async function AppPage({
 }) {
   const params = await searchParams;
   
+  console.log('🔍 App page params:', params);
+  
   // Handle payment success from Stripe
   if (params.payment === 'success') {
+    console.log('✅ Payment success detected, showing PaymentSuccess component');
     return <PaymentSuccess sessionId={params.session_id} />;
   }
 

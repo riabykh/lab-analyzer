@@ -10,12 +10,16 @@ interface PaymentSuccessProps {
 export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [countdown, setCountdown] = useState(10);
+  
+  console.log('🎉 PaymentSuccess component loaded with sessionId:', sessionId);
 
   useEffect(() => {
-    // Poll for session creation (webhook processing)
-    const checkSession = async () => {
+    // Activate premium account directly
+    const activatePremium = async () => {
       try {
-        const response = await fetch('/api/auth/check-payment-status', {
+        console.log('🔄 Activating premium account for session:', sessionId);
+        
+        const response = await fetch('/api/auth/activate-premium', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId })
@@ -23,22 +27,24 @@ export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
 
         if (response.ok) {
           const data = await response.json();
-          if (data.sessionCreated) {
-            setStatus('success');
-            // Redirect to dashboard after 3 seconds
-            setTimeout(() => {
-              window.location.href = '/app';
-            }, 3000);
-            return;
-          }
+          console.log('✅ Premium activated:', data);
+          setStatus('success');
+          // Redirect to premium dashboard
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 2000);
+          return;
+        } else {
+          const errorData = await response.json();
+          console.error('❌ Premium activation failed:', errorData);
         }
       } catch (error) {
-        console.error('Session check failed:', error);
+        console.error('❌ Premium activation error:', error);
       }
 
       // Continue polling if not successful
       if (countdown > 0) {
-        setTimeout(checkSession, 1000);
+        setTimeout(activatePremium, 2000); // Check every 2 seconds
       } else {
         setStatus('error');
       }
@@ -48,8 +54,8 @@ export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
       setCountdown(prev => prev - 1);
     }, 1000);
 
-    // Start checking immediately
-    checkSession();
+    // Start activation immediately
+    activatePremium();
 
     return () => clearInterval(timer);
   }, [sessionId, countdown]);
@@ -100,13 +106,20 @@ export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
             </h1>
             
             <p className="text-gray-600 mb-6">
-              Your account has been upgraded successfully. Redirecting to your dashboard...
+              Your premium account is ready! Redirecting to your unlimited lab analysis dashboard...
             </p>
             
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-green-800">
-                🎉 You now have unlimited lab analysis access!
+            <div className="bg-green-50 rounded-lg p-4 mb-4">
+              <p className="text-sm text-green-800 font-semibold mb-2">
+                🎉 Premium Features Unlocked:
               </p>
+              <ul className="text-xs text-green-700 space-y-1">
+                <li>• Unlimited lab result insights</li>
+                <li>• Advanced AI explanations</li>
+                <li>• PDF report generation</li>
+                <li>• Historical trend analysis</li>
+                <li>• Priority support</li>
+              </ul>
             </div>
           </div>
         </div>

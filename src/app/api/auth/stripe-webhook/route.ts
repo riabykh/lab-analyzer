@@ -66,18 +66,27 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: any) {
   try {
-    console.log('Checkout completed:', session.id);
+    console.log('✅ Checkout completed for session:', session.id);
     
     if (session.mode === 'subscription' && session.subscription) {
       // Create paid user session
       const email = session.customer_details?.email || session.customer_email;
       if (email) {
+        console.log('🔄 Creating paid session for email:', email);
         const sessionToken = await createPaidSession(email, session.subscription);
-        console.log('Created paid session for:', email);
+        console.log('🎉 Created paid session token for:', email);
+        
+        // Store session info for later retrieval
+        // Note: In a real app, you'd store this in a database
+        // For now, we'll rely on the session token being available
+      } else {
+        console.error('❌ No email found in checkout session');
       }
+    } else {
+      console.error('❌ Not a subscription checkout or missing subscription ID');
     }
   } catch (error) {
-    console.error('Error handling checkout completion:', error);
+    console.error('❌ Error handling checkout completion:', error);
   }
 }
 
