@@ -6,6 +6,9 @@ export async function POST(request: NextRequest) {
     
     const { plan, success_url, cancel_url } = await request.json();
     console.log('📋 Request data:', { plan, success_url, cancel_url });
+    
+    const finalSuccessUrl = `${success_url}&session_id={CHECKOUT_SESSION_ID}`;
+    console.log('🎯 Final success URL being sent to Stripe:', finalSuccessUrl);
 
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('❌ Stripe secret key not configured');
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
       },
       body: new URLSearchParams({
         'mode': 'subscription',
-        'success_url': `${success_url}&session_id={CHECKOUT_SESSION_ID}`,
+        'success_url': finalSuccessUrl,
         'cancel_url': cancel_url,
         'line_items[0][price]': process.env.STRIPE_PRICE_ID || '',
         'line_items[0][quantity]': '1',
