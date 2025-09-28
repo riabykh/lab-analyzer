@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       },
       body: new URLSearchParams({
         'mode': 'subscription',
-        'success_url': success_url,
+        'success_url': `${success_url}&session_id={CHECKOUT_SESSION_ID}`,
         'cancel_url': cancel_url,
         'line_items[0][price]': process.env.STRIPE_PRICE_ID || '',
         'line_items[0][quantity]': '1',
