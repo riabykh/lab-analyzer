@@ -30,21 +30,43 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
   const [fileName, setFileName] = useState<string>('');
 
   const handleFileAnalyzed = (results: AnalysisResult[], analysisData?: any) => {
-    console.log('📊 Analysis completed:', results);
+    console.log('📊 Analysis completed:', { results, analysisData });
     
-    if (analysisData) {
-      setAnalysis(analysisData);
-    } else {
-      // Fallback structure if only results provided
+    try {
+      if (analysisData) {
+        // Ensure all arrays are properly initialized
+        const safeAnalysis = {
+          results: Array.isArray(analysisData.results) ? analysisData.results : (Array.isArray(results) ? results : []),
+          critical_findings: Array.isArray(analysisData.critical_findings) ? analysisData.critical_findings : [],
+          summary: analysisData.summary || 'Analysis completed successfully.',
+          recommendations: Array.isArray(analysisData.recommendations) ? analysisData.recommendations : []
+        };
+        console.log('📋 Setting safe analysis:', safeAnalysis);
+        setAnalysis(safeAnalysis);
+      } else {
+        // Fallback structure if only results provided
+        const fallbackAnalysis = {
+          results: Array.isArray(results) ? results : [],
+          critical_findings: [],
+          summary: 'Analysis completed successfully.',
+          recommendations: []
+        };
+        console.log('📋 Setting fallback analysis:', fallbackAnalysis);
+        setAnalysis(fallbackAnalysis);
+      }
+      
+      setStep('results');
+    } catch (error) {
+      console.error('❌ Error processing analysis results:', error);
+      // Set a safe fallback
       setAnalysis({
-        results,
+        results: [],
         critical_findings: [],
-        summary: 'Analysis completed successfully.',
+        summary: 'Analysis completed, but there was an issue displaying the results.',
         recommendations: []
       });
+      setStep('results');
     }
-    
-    setStep('results');
   };
 
   const generatePDFReport = () => {
@@ -85,7 +107,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
           
           <div class="section">
             <h2>Lab Results</h2>
-            ${analysis.results.map(result => `
+            ${analysis.results && Array.isArray(analysis.results) ? analysis.results.map(result => `
               <div class="result ${result.status}">
                 <h3>${result.test_name}</h3>
                 <p><strong>Value:</strong> ${result.value} ${result.unit || ''}</p>
@@ -93,10 +115,10 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
                 <p><strong>Status:</strong> ${result.status.toUpperCase()}</p>
                 <p><strong>Interpretation:</strong> ${result.interpretation}</p>
               </div>
-            `).join('')}
+            `).join('') : '<p>No lab results available.</p>'}
           </div>
           
-          ${analysis.critical_findings.length > 0 ? `
+          ${analysis.critical_findings && Array.isArray(analysis.critical_findings) && analysis.critical_findings.length > 0 ? `
             <div class="section">
               <h2>Critical Findings</h2>
               <ul>
@@ -109,7 +131,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
             <h2>Lifestyle Recommendations</h2>
             <div class="recommendations">
               <ul>
-                ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                ${analysis.recommendations && Array.isArray(analysis.recommendations) ? analysis.recommendations.map(rec => `<li>${rec}</li>`).join('') : '<li>No recommendations available.</li>'}
               </ul>
             </div>
           </div>
@@ -230,7 +252,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
         </div>
 
         {/* Critical Findings */}
-        {analysis?.critical_findings && analysis.critical_findings.length > 0 && (
+        {analysis?.critical_findings && Array.isArray(analysis.critical_findings) && analysis.critical_findings.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
             <h2 className="text-xl font-semibold text-red-900 mb-4">Critical Findings</h2>
             <ul className="space-y-2">
@@ -248,7 +270,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Lab Results</h2>
           <div className="space-y-4">
-            {analysis?.results.map((result, index) => (
+            {analysis?.results && Array.isArray(analysis.results) ? analysis.results.map((result, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-gray-900">{result.test_name}</h3>
@@ -275,7 +297,11 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
                 </div>
                 <p className="text-gray-700 text-sm">{result.interpretation}</p>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No lab results found in the analysis.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -283,12 +309,16 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
         <div className="bg-blue-50 rounded-2xl p-6">
           <h2 className="text-xl font-semibold text-blue-900 mb-4">Lifestyle Recommendations</h2>
           <div className="space-y-3">
-            {analysis?.recommendations.map((recommendation, index) => (
+            {analysis?.recommendations && Array.isArray(analysis.recommendations) ? analysis.recommendations.map((recommendation, index) => (
               <div key={index} className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <p className="text-blue-800">{recommendation}</p>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4 text-gray-500">
+                <p>No recommendations available.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
