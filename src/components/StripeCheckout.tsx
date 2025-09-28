@@ -45,7 +45,15 @@ export default function StripeCheckout({ plan, onSuccess, onClose }: StripeCheck
   }, []);
 
   const openCheckout = async () => {
-    if (!stripe || !stripeLoaded) return;
+    console.log('🔄 Checkout button clicked');
+    
+    if (!stripe || !stripeLoaded) {
+      console.error('❌ Stripe not loaded:', { stripe: !!stripe, stripeLoaded });
+      alert('Stripe is not loaded yet. Please wait a moment and try again.');
+      return;
+    }
+
+    console.log('✅ Stripe loaded, creating checkout session...');
 
     try {
       // Create checkout session
@@ -61,12 +69,24 @@ export default function StripeCheckout({ plan, onSuccess, onClose }: StripeCheck
         }),
       });
 
+      console.log('📡 Checkout API response status:', response.status);
+      
       const session = await response.json();
+      console.log('📄 Checkout session response:', session);
       
       if (session.error) {
-        console.error('Checkout session creation failed:', session.error);
+        console.error('❌ Checkout session creation failed:', session.error);
+        alert(`Checkout failed: ${session.error}`);
         return;
       }
+
+      if (!session.id) {
+        console.error('❌ No session ID returned:', session);
+        alert('Failed to create checkout session. Please try again.');
+        return;
+      }
+
+      console.log('🚀 Redirecting to Stripe with session ID:', session.id);
 
       // Redirect to Stripe Checkout
       const { error } = await stripe.redirectToCheckout({
@@ -74,10 +94,12 @@ export default function StripeCheckout({ plan, onSuccess, onClose }: StripeCheck
       });
 
       if (error) {
-        console.error('Stripe redirect error:', error);
+        console.error('❌ Stripe redirect error:', error);
+        alert(`Stripe redirect failed: ${error.message}`);
       }
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('💥 Checkout error:', error);
+      alert(`Checkout error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
