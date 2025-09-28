@@ -149,10 +149,22 @@ export class ChatGPTUniversalService {
       });
 
       // Step 2: Create assistant for medical analysis
+      // Use a model that definitely works with Assistants API
+      const assistantModel = (this.config.model && this.config.model.includes('gpt-5')) 
+        ? 'gpt-4o-2024-11-20' 
+        : (this.config.model || 'gpt-4o-2024-11-20');
+      
+      logger.info('Creating assistant for PDF analysis', {
+        requestId,
+        originalModel: this.config.model,
+        assistantModel,
+        fileName
+      });
+      
       const assistant = await this.openai.beta.assistants.create({
         name: "Lab Results Analyzer",
         instructions: this.getPDFAnalysisSystemPrompt(),
-        model: this.config.model!,
+        model: assistantModel,
         tools: [{ type: "file_search" }]
       });
 
