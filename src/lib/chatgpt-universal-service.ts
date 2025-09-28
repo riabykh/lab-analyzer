@@ -66,13 +66,21 @@ export class ChatGPTUniversalService {
 
       let analysisResult: AnalysisResponse;
 
+      logger.info('File type detection', {
+        requestId,
+        detectedType: file.type,
+        fileName: file.name
+      });
+
       if (file.type === 'text/plain') {
         // Handle text files directly
+        logger.info('Processing as text file', { requestId });
         const text = await file.text();
         analysisResult = await this.analyzeTextContent(text, requestId);
         
       } else if (file.type === 'application/pdf') {
         // Handle PDFs using OpenAI's native file upload and analysis
+        logger.info('Processing as PDF file', { requestId });
         const buffer = await file.arrayBuffer();
         analysisResult = await this.analyzePDFWithChatGPT(buffer, file.name, requestId);
         
@@ -548,6 +556,11 @@ If no medical data is found, return:
 
   private parseAndValidateResponse(content: string): AnalysisResponse {
     try {
+      logger.info('Raw AI response before parsing', { 
+        content: content.substring(0, 500) + (content.length > 500 ? '...' : ''),
+        fullLength: content.length 
+      });
+
       // Clean potential markdown formatting
       let cleanContent = content.trim();
       if (cleanContent.startsWith('```json')) {
@@ -556,11 +569,31 @@ If no medical data is found, return:
         cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
+      logger.info('Cleaned content for parsing', { 
+        cleanContent: cleanContent.substring(0, 500) + (cleanContent.length > 500 ? '...' : ''),
+        cleanLength: cleanContent.length 
+      });
+
       const parsed = JSON.parse(cleanContent);
-      return AnalysisResponseSchema.parse(parsed);
+      logger.info('JSON parsed successfully', { 
+        parsedKeys: Object.keys(parsed),
+        resultsLength: parsed.results?.length || 0
+      });
+
+      const validated = AnalysisResponseSchema.parse(parsed);
+      logger.info('Schema validation successful', {
+        resultsCount: validated.results.length,
+        criticalCount: validated.critical_findings.length,
+        recommendationsCount: validated.recommendations.length
+      });
+
+      return validated;
       
     } catch (error) {
-      logger.error('JSON parsing or validation failed', error instanceof Error ? error : { error: String(error) });
+      logger.error('JSON parsing or validation failed', { 
+        error: error instanceof Error ? error : { error: String(error) },
+        contentPreview: content.substring(0, 200)
+      });
       throw new Error(`Invalid ChatGPT response format: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
