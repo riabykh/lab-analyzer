@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, FileText, Zap, CheckCircle, Download } from 'lucide-react';
+import { Upload, FileText, Zap, CheckCircle, Download, AlertTriangle, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
 import FileUpload from './FileUpload';
 
 interface OneTimeAnalysisProps {
@@ -222,22 +222,23 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Your Lab Analysis
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700 text-lg">
                 AI-powered insights and lifestyle recommendations
               </p>
             </div>
             <button
               onClick={generatePDFReport}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 focus:ring-4 focus:ring-blue-200 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+              aria-label="Download your lab analysis report as PDF"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-5 w-5" aria-hidden="true" />
               Download Report
             </button>
           </div>
@@ -246,20 +247,30 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Summary */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Summary</h2>
-          <p className="text-gray-700">{analysis?.summary}</p>
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Info className="h-5 w-5 text-blue-700" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Analysis Summary</h2>
+          </div>
+          <p className="text-gray-800 leading-relaxed text-base">{analysis?.summary}</p>
         </div>
 
         {/* Critical Findings */}
         {analysis?.critical_findings && Array.isArray(analysis.critical_findings) && analysis.critical_findings.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
-            <h2 className="text-xl font-semibold text-red-900 mb-4">Critical Findings</h2>
-            <ul className="space-y-2">
+          <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-6 mb-6" role="alert" aria-labelledby="critical-findings-title">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-200 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-red-800" />
+              </div>
+              <h2 id="critical-findings-title" className="text-xl font-semibold text-red-900">Critical Findings</h2>
+            </div>
+            <ul className="space-y-3" role="list">
               {analysis.critical_findings.map((finding, index) => (
-                <li key={index} className="text-red-800 flex items-start gap-2">
-                  <span className="text-red-500 mt-1">•</span>
-                  {finding}
+                <li key={index} className="text-red-900 flex items-start gap-3 p-3 bg-white rounded-lg border border-red-200">
+                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                  <span className="font-medium leading-relaxed">{finding}</span>
                 </li>
               ))}
             </ul>
@@ -267,60 +278,125 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
         )}
 
         {/* Lab Results */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Lab Results</h2>
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <FileText className="h-5 w-5 text-green-700" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Lab Results</h2>
+          </div>
           <div className="space-y-4">
-            {analysis?.results && Array.isArray(analysis.results) ? analysis.results.map((result, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-900">{result.test_name}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    result.status === 'normal' ? 'bg-green-100 text-green-800' :
-                    result.status === 'high' ? 'bg-red-100 text-red-800' :
-                    result.status === 'low' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {result.status.toUpperCase()}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <span className="text-sm text-gray-500">Value:</span>
-                    <span className="ml-2 font-medium">{result.value} {result.unit}</span>
-                  </div>
-                  {result.reference_range && (
-                    <div>
-                      <span className="text-sm text-gray-500">Reference Range:</span>
-                      <span className="ml-2 font-medium">{result.reference_range}</span>
+            {analysis?.results && Array.isArray(analysis.results) ? analysis.results.map((result, index) => {
+              const getStatusConfig = (status: string) => {
+                switch (status) {
+                  case 'normal':
+                    return {
+                      icon: CheckCircle,
+                      bgColor: 'bg-green-50',
+                      borderColor: 'border-green-200',
+                      iconColor: 'text-green-600',
+                      textColor: 'text-green-800',
+                      badgeColor: 'bg-green-100 text-green-800 border-green-300'
+                    };
+                  case 'high':
+                    return {
+                      icon: TrendingUp,
+                      bgColor: 'bg-red-50',
+                      borderColor: 'border-red-200',
+                      iconColor: 'text-red-600',
+                      textColor: 'text-red-800',
+                      badgeColor: 'bg-red-100 text-red-800 border-red-300'
+                    };
+                  case 'low':
+                    return {
+                      icon: TrendingDown,
+                      bgColor: 'bg-orange-50',
+                      borderColor: 'border-orange-200',
+                      iconColor: 'text-orange-600',
+                      textColor: 'text-orange-800',
+                      badgeColor: 'bg-orange-100 text-orange-800 border-orange-300'
+                    };
+                  default:
+                    return {
+                      icon: Minus,
+                      bgColor: 'bg-gray-50',
+                      borderColor: 'border-gray-200',
+                      iconColor: 'text-gray-600',
+                      textColor: 'text-gray-800',
+                      badgeColor: 'bg-gray-100 text-gray-800 border-gray-300'
+                    };
+                }
+              };
+              
+              const statusConfig = getStatusConfig(result.status);
+              const StatusIcon = statusConfig.icon;
+              
+              return (
+                <div key={index} className={`${statusConfig.bgColor} ${statusConfig.borderColor} border-2 rounded-lg p-4`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <StatusIcon className={`h-5 w-5 ${statusConfig.iconColor}`} aria-hidden="true" />
+                      <h3 className="font-semibold text-gray-900 text-lg">{result.test_name}</h3>
                     </div>
-                  )}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.badgeColor}`} 
+                          role="status" 
+                          aria-label={`Status: ${result.status}`}>
+                      {result.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <span className="text-sm font-medium text-gray-600">Value:</span>
+                      <span className="ml-2 font-bold text-gray-900 text-lg">{result.value} {result.unit}</span>
+                    </div>
+                    {result.reference_range && (
+                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <span className="text-sm font-medium text-gray-600">Reference Range:</span>
+                        <span className="ml-2 font-medium text-gray-800">{result.reference_range}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Interpretation:</h4>
+                    <p className={`${statusConfig.textColor} leading-relaxed font-medium`}>{result.interpretation}</p>
+                  </div>
                 </div>
-                <p className="text-gray-700 text-sm">{result.interpretation}</p>
-              </div>
-            )) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No lab results found in the analysis.</p>
-              </div>
-            )}
+              );
+              }) : (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="font-medium">No lab results found in the analysis.</p>
+                  <p className="text-sm mt-1">Please ensure your file contains laboratory test results.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Lifestyle Recommendations */}
-        <div className="bg-blue-50 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">Lifestyle Recommendations</h2>
-          <div className="space-y-3">
-            {analysis?.recommendations && Array.isArray(analysis.recommendations) ? analysis.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <p className="text-blue-800">{recommendation}</p>
+          {/* Lifestyle Recommendations */}
+          <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-200 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-blue-800" />
               </div>
-            )) : (
-              <div className="text-center py-4 text-gray-500">
-                <p>No recommendations available.</p>
-              </div>
-            )}
+              <h2 className="text-xl font-semibold text-blue-900">Lifestyle Recommendations</h2>
+            </div>
+            <div className="space-y-4">
+              {analysis?.recommendations && Array.isArray(analysis.recommendations) ? analysis.recommendations.map((recommendation, index) => (
+                <div key={index} className="flex items-start gap-4 p-4 bg-white rounded-lg border border-blue-200 shadow-sm">
+                  <div className="p-1 bg-blue-100 rounded-full mt-1">
+                    <CheckCircle className="h-4 w-4 text-blue-600 flex-shrink-0" aria-hidden="true" />
+                  </div>
+                  <p className="text-blue-900 font-medium leading-relaxed">{recommendation}</p>
+                </div>
+              )) : (
+                <div className="text-center py-6 text-blue-700 bg-white rounded-lg border border-blue-200">
+                  <CheckCircle className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+                  <p className="font-medium">No specific recommendations available.</p>
+                  <p className="text-sm mt-1">General health guidelines apply.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
       </div>
     </div>
   );
