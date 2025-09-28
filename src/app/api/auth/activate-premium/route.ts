@@ -48,26 +48,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create premium session
-    const userEmail = email || stripeSession.customer_details?.email || 'premium@user.com';
-    const sessionToken = await createPaidSession(userEmail, stripeSession.subscription || sessionId);
-    
-    console.log('🎉 Created premium session for:', userEmail);
+    console.log('🎉 One-time payment verified for session:', sessionId);
 
-    // Set the session cookie
-    const cookieStore = await cookies();
-    cookieStore.set('labwise_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 hours
-      path: '/'
-    });
-
+    // For one-time payment model, we don't create user accounts
+    // Just verify payment and allow file upload
     return NextResponse.json({ 
       success: true,
-      message: 'Premium account activated',
-      email: userEmail
+      message: 'Payment verified - ready for file analysis',
+      sessionId: sessionId,
+      paymentStatus: 'paid'
     });
 
   } catch (error) {

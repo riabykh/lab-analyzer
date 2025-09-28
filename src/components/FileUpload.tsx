@@ -11,6 +11,7 @@ interface FileUploadProps {
   setIsProcessing?: (processing: boolean) => void;
   maxInsights?: number;
   userTier?: string;
+  onFileSelected?: (file: File) => void;
 }
 
 export default function FileUpload({ 
@@ -19,7 +20,8 @@ export default function FileUpload({
   isProcessing = false,
   setIsProcessing = () => {},
   maxInsights = 10,
-  userTier = 'free'
+  userTier = 'free',
+  onFileSelected = () => {}
 }: FileUploadProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState('');
@@ -27,6 +29,7 @@ export default function FileUpload({
   const analyzeFile = async (file: File) => {
     setIsAnalyzing(true);
     setProgress('Uploading file...');
+    onFileSelected(file);
 
     try {
       const formData = new FormData();

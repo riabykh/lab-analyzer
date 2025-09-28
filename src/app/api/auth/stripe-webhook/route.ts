@@ -30,23 +30,11 @@ export async function POST(request: NextRequest) {
         await handleCheckoutCompleted(event.data.object);
         break;
       
-      case 'customer.subscription.created':
-        await handleSubscriptionCreated(event.data.object);
-        break;
-      
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object);
-        break;
-      
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object);
-        break;
-      
-      case 'invoice.payment_succeeded':
+      case 'payment_intent.succeeded':
         await handlePaymentSucceeded(event.data.object);
         break;
       
-      case 'invoice.payment_failed':
+      case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object);
         break;
       
@@ -66,71 +54,34 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: any) {
   try {
-    console.log('✅ Checkout completed for session:', session.id);
+    console.log('✅ One-time payment completed for session:', session.id);
     
-    if (session.mode === 'subscription' && session.subscription) {
-      // Create paid user session
-      const email = session.customer_details?.email || session.customer_email;
-      if (email) {
-        console.log('🔄 Creating paid session for email:', email);
-        const sessionToken = await createPaidSession(email, session.subscription);
-        console.log('🎉 Created paid session token for:', email);
-        
-        // Store session info for later retrieval
-        // Note: In a real app, you'd store this in a database
-        // For now, we'll rely on the session token being available
-      } else {
-        console.error('❌ No email found in checkout session');
-      }
+    if (session.mode === 'payment' && session.payment_status === 'paid') {
+      console.log('🎉 One-time payment successful for session:', session.id);
+      // Payment is complete - user can now upload file and get analysis
+      // No need to create user accounts or sessions
     } else {
-      console.error('❌ Not a subscription checkout or missing subscription ID');
+      console.error('❌ Not a payment checkout or payment not completed');
     }
   } catch (error) {
     console.error('❌ Error handling checkout completion:', error);
   }
 }
 
-async function handleSubscriptionCreated(subscription: any) {
+async function handlePaymentSucceeded(paymentIntent: any) {
   try {
-    console.log('Subscription created:', subscription.id);
-    // Additional subscription creation logic here
+    console.log('✅ One-time payment succeeded:', paymentIntent.id);
+    // Payment successful - user can proceed with file analysis
   } catch (error) {
-    console.error('Error handling subscription creation:', error);
+    console.error('❌ Error handling payment success:', error);
   }
 }
 
-async function handleSubscriptionUpdated(subscription: any) {
+async function handlePaymentFailed(paymentIntent: any) {
   try {
-    console.log('Subscription updated:', subscription.id);
-    // Handle subscription updates (plan changes, etc.)
-  } catch (error) {
-    console.error('Error handling subscription update:', error);
-  }
-}
-
-async function handleSubscriptionDeleted(subscription: any) {
-  try {
-    console.log('Subscription deleted:', subscription.id);
-    // Handle subscription cancellation
-  } catch (error) {
-    console.error('Error handling subscription deletion:', error);
-  }
-}
-
-async function handlePaymentSucceeded(invoice: any) {
-  try {
-    console.log('Payment succeeded for invoice:', invoice.id);
-    // Handle successful payment
-  } catch (error) {
-    console.error('Error handling payment success:', error);
-  }
-}
-
-async function handlePaymentFailed(invoice: any) {
-  try {
-    console.log('Payment failed for invoice:', invoice.id);
+    console.log('❌ One-time payment failed:', paymentIntent.id);
     // Handle failed payment
   } catch (error) {
-    console.error('Error handling payment failure:', error);
+    console.error('❌ Error handling payment failure:', error);
   }
 }

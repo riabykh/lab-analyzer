@@ -27,11 +27,11 @@ export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Premium activated:', data);
+          console.log('✅ Payment verified:', data);
           setStatus('success');
-          // Redirect to premium dashboard
+          // Redirect to one-time analysis page
           setTimeout(() => {
-            window.location.href = '/app';
+            window.location.href = `/analysis?session_id=${sessionId}`;
           }, 2000);
           return;
         } else {
@@ -102,23 +102,22 @@ export default function PaymentSuccess({ sessionId }: PaymentSuccessProps) {
             </div>
             
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Welcome to LabWise Plus!
+              Payment Successful!
             </h1>
             
             <p className="text-gray-600 mb-6">
-              Your premium account is ready! Redirecting to your unlimited lab analysis dashboard...
+              Your payment is confirmed. Redirecting to your lab analysis page...
             </p>
             
             <div className="bg-green-50 rounded-lg p-4 mb-4">
               <p className="text-sm text-green-800 font-semibold mb-2">
-                🎉 Premium Features Unlocked:
+                🎉 Ready for Analysis:
               </p>
               <ul className="text-xs text-green-700 space-y-1">
-                <li>• Unlimited lab result insights</li>
-                <li>• Advanced AI explanations</li>
-                <li>• PDF report generation</li>
-                <li>• Historical trend analysis</li>
-                <li>• Priority support</li>
+                <li>• Upload your lab results</li>
+                <li>• Get AI-powered insights</li>
+                <li>• Receive lifestyle recommendations</li>
+                <li>• Download your analysis report</li>
               </ul>
             </div>
           </div>

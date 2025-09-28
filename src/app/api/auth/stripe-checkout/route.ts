@@ -38,13 +38,14 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        'mode': 'subscription',
+        'mode': 'payment',
         'success_url': finalSuccessUrl,
         'cancel_url': cancel_url,
         'line_items[0][price]': process.env.STRIPE_PRICE_ID || '',
         'line_items[0][quantity]': '1',
         'allow_promotion_codes': 'true',
         'billing_address_collection': 'required',
+        'metadata[type]': 'one_time_analysis',
         'metadata[plan]': plan,
       }),
     });
