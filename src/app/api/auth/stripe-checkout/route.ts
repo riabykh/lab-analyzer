@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
         'line_items[0][quantity]': '1',
         'allow_promotion_codes': 'true',
         'billing_address_collection': 'required',
-        'customer_creation': 'always',
         'metadata[plan]': plan,
       }),
     });
