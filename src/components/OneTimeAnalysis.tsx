@@ -169,7 +169,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
                 Payment Confirmed
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Upload Your Lab Results</h2>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Upload your lab report and get comprehensive insights with lifestyle recommendations.
               </p>
             </div>
@@ -181,7 +181,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
               onFileSelected={(file) => setFileName(file.name)}
             />
 
-            <div className="mt-8 text-center text-sm text-gray-500">
+            <div className="mt-8 text-center text-sm text-gray-700">
               Session ID: {sessionId}
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
               Analyzing Your Lab Results
             </h1>
             
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Our AI is processing your lab data and generating personalized insights...
             </p>
             
@@ -346,27 +346,27 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="bg-white p-3 rounded-lg border border-gray-200">
-                      <span className="text-sm font-medium text-gray-600">Value:</span>
+                      <span className="text-sm font-semibold text-gray-800">Value:</span>
                       <span className="ml-2 font-bold text-gray-900 text-lg">{result.value} {result.unit}</span>
                     </div>
                     {result.reference_range && (
                       <div className="bg-white p-3 rounded-lg border border-gray-200">
-                        <span className="text-sm font-medium text-gray-600">Reference Range:</span>
-                        <span className="ml-2 font-medium text-gray-800">{result.reference_range}</span>
+                        <span className="text-sm font-semibold text-gray-800">Reference Range:</span>
+                        <span className="ml-2 font-semibold text-gray-900">{result.reference_range}</span>
                       </div>
                     )}
                   </div>
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Interpretation:</h4>
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Interpretation:</h4>
                     <p className={`${statusConfig.textColor} leading-relaxed font-medium`}>{result.interpretation}</p>
                   </div>
                 </div>
               );
               }) : (
-                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="font-medium">No lab results found in the analysis.</p>
-                  <p className="text-sm mt-1">Please ensure your file contains laboratory test results.</p>
+                <div className="text-center py-8 text-gray-700 bg-gray-50 rounded-lg border border-gray-200">
+                  <FileText className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  <p className="font-medium text-gray-800">No lab results found in the analysis.</p>
+                  <p className="text-sm mt-1 text-gray-700">Please ensure your file contains laboratory test results.</p>
                 </div>
               )}
             </div>
@@ -389,10 +389,10 @@ export default function OneTimeAnalysis({ sessionId }: OneTimeAnalysisProps) {
                   <p className="text-blue-900 font-medium leading-relaxed">{recommendation}</p>
                 </div>
               )) : (
-                <div className="text-center py-6 text-blue-700 bg-white rounded-lg border border-blue-200">
-                  <CheckCircle className="h-12 w-12 text-blue-400 mx-auto mb-3" />
-                  <p className="font-medium">No specific recommendations available.</p>
-                  <p className="text-sm mt-1">General health guidelines apply.</p>
+                <div className="text-center py-6 text-blue-800 bg-white rounded-lg border border-blue-200">
+                  <CheckCircle className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+                  <p className="font-medium text-blue-900">No specific recommendations available.</p>
+                  <p className="text-sm mt-1 text-blue-800">General health guidelines apply.</p>
                 </div>
               )}
             </div>
