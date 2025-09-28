@@ -5,39 +5,32 @@ import { CreditCard, Shield, CheckCircle, Star } from 'lucide-react';
 
 declare global {
   interface Window {
-    Paddle: any;
+    Stripe: any;
   }
 }
 
-interface PaddleCheckoutProps {
+interface StripeCheckoutProps {
   plan: 'plus';
   onSuccess?: (data: any) => void;
   onClose?: () => void;
 }
 
-export default function PaddleCheckout({ plan, onSuccess, onClose }: PaddleCheckoutProps) {
+export default function StripeCheckout({ plan, onSuccess, onClose }: StripeCheckoutProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [paddleLoaded, setPaddleLoaded] = useState(false);
+  const [stripeLoaded, setStripeLoaded] = useState(false);
+  const [stripe, setStripe] = useState<any>(null);
 
   useEffect(() => {
-    // Load Paddle.js
+    // Load Stripe.js
     const script = document.createElement('script');
-    script.src = 'https://cdn.paddle.com/paddle/paddle.js';
+    script.src = 'https://js.stripe.com/v3/';
     script.async = true;
     
     script.onload = () => {
-      if (window.Paddle) {
-        window.Paddle.Setup({ 
-          vendor: parseInt(process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID || '0'),
-          eventCallback: (data: any) => {
-            if (data.event === 'Checkout.Complete') {
-              onSuccess?.(data);
-            } else if (data.event === 'Checkout.Close') {
-              onClose?.();
-            }
-          }
-        });
-        setPaddleLoaded(true);
+      if (window.Stripe && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+        const stripeInstance = window.Stripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+        setStripe(stripeInstance);
+        setStripeLoaded(true);
         setIsLoading(false);
       }
     };
@@ -45,27 +38,47 @@ export default function PaddleCheckout({ plan, onSuccess, onClose }: PaddleCheck
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
-    };
-  }, [onSuccess, onClose]);
-
-  const openCheckout = () => {
-    if (!window.Paddle || !paddleLoaded) return;
-
-    const checkoutData = {
-      product: process.env.NEXT_PUBLIC_PADDLE_PRODUCT_ID,
-      successCallback: (data: any) => {
-        console.log('Checkout successful:', data);
-        // Redirect to app with success
-        window.location.href = `/app?payment=success&checkout=${data.checkout.id}`;
-      },
-      closeCallback: () => {
-        console.log('Checkout closed');
-        onClose?.();
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
       }
     };
+  }, []);
 
-    window.Paddle.Checkout.open(checkoutData);
+  const openCheckout = async () => {
+    if (!stripe || !stripeLoaded) return;
+
+    try {
+      // Create checkout session
+      const response = await fetch('/api/auth/stripe-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: 'plus',
+          success_url: `${window.location.origin}/app?payment=success`,
+          cancel_url: `${window.location.origin}/checkout?payment=cancelled`,
+        }),
+      });
+
+      const session = await response.json();
+      
+      if (session.error) {
+        console.error('Checkout session creation failed:', session.error);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (error) {
+        console.error('Stripe redirect error:', error);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+    }
   };
 
   if (isLoading) {
@@ -143,11 +156,11 @@ export default function PaddleCheckout({ plan, onSuccess, onClose }: PaddleCheck
 
               <button
                 onClick={openCheckout}
-                disabled={!paddleLoaded}
+                disabled={!stripeLoaded}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <CreditCard className="h-5 w-5" />
-                {paddleLoaded ? 'Secure Checkout' : 'Loading...'}
+                {stripeLoaded ? 'Secure Checkout' : 'Loading...'}
               </button>
             </div>
 
@@ -158,7 +171,7 @@ export default function PaddleCheckout({ plan, onSuccess, onClose }: PaddleCheck
                 <div>
                   <h3 className="font-semibold text-green-900 mb-1">Secure Payment</h3>
                   <p className="text-sm text-green-800">
-                    Your payment is processed securely by Paddle. We never store your payment information.
+                    Your payment is processed securely by Stripe. We never store your payment information.
                   </p>
                 </div>
               </div>

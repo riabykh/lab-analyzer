@@ -7,7 +7,7 @@ export interface UserSession {
   userId: string;
   email: string;
   plan: 'free' | 'plus';
-  paddleSubscriptionId?: string;
+  stripeSubscriptionId?: string;
   expiresAt: number;
   usageCount: number;
   maxUsage: number;
@@ -62,25 +62,26 @@ export async function getCurrentSession(): Promise<AuthResult> {
   return await verifySession(token);
 }
 
-// Verify Paddle payment status
-export async function verifyPaddlePayment(paddleData: any): Promise<boolean> {
+// Verify Stripe payment status
+export async function verifyStripePayment(stripeData: any): Promise<boolean> {
   try {
-    const response = await fetch('https://vendors.paddle.com/api/2.0/subscription/users', {
-      method: 'POST',
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Stripe secret key not configured');
+      return false;
+    }
+
+    const response = await fetch(`https://api.stripe.com/v1/subscriptions/${stripeData.subscription_id}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        vendor_id: process.env.PADDLE_VENDOR_ID,
-        vendor_auth_code: process.env.PADDLE_AUTH_CODE,
-        subscription_id: paddleData.subscription_id,
-      }),
     });
 
     const result = await response.json();
-    return result.success && result.response[0]?.state === 'active';
+    return result.status === 'active';
   } catch (error) {
-    console.error('Paddle verification failed:', error);
+    console.error('Stripe verification failed:', error);
     return false;
   }
 }
@@ -98,10 +99,10 @@ export async function createFreeSession(email?: string): Promise<string> {
   });
 }
 
-// Create paid user session after Paddle payment
+// Create paid user session after Stripe payment
 export async function createPaidSession(
   email: string, 
-  paddleSubscriptionId: string
+  stripeSubscriptionId: string
 ): Promise<string> {
   const userId = `paid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
@@ -109,7 +110,7 @@ export async function createPaidSession(
     userId,
     email,
     plan: 'plus',
-    paddleSubscriptionId,
+    stripeSubscriptionId,
     usageCount: 0,
     maxUsage: -1, // Unlimited
   });

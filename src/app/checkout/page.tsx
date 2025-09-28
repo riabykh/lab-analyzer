@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import PaddleCheckout from '@/components/PaddleCheckout';
+import StripeCheckout from '@/components/StripeCheckout';
 
 export const metadata: Metadata = {
   title: 'Checkout | LabWise',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutPage() {
-  return <PaddleCheckout plan="plus" />;
+  return <StripeCheckout plan="plus" />;
 }

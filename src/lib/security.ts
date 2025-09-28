@@ -136,14 +136,14 @@ export function verifyRequestSignature(
   return signature.toLowerCase() === expectedSignature.toLowerCase();
 }
 
-// Paddle webhook signature verification
-export function verifyPaddleWebhook(body: string, signature: string): boolean {
-  const publicKey = process.env.PADDLE_PUBLIC_KEY;
-  if (!publicKey || !signature) return false;
+// Stripe webhook signature verification
+export function verifyStripeWebhook(body: string, signature: string): boolean {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret || !signature) return false;
 
   // Placeholder implementation for Edge Runtime compatibility
-  // In production, use proper RSA signature verification
-  return signature.length > 10 && body.length > 0 && publicKey.length > 0;
+  // In production, use proper HMAC-SHA256 signature verification with Stripe's library
+  return signature.length > 10 && body.length > 0 && webhookSecret.length > 0;
 }
 
 // Input sanitization
@@ -214,12 +214,12 @@ export function getSecurityHeaders(): Record<string, string> {
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://api.openai.com https://vendors.paddle.com",
-      "frame-src https://sandbox-checkout.paddle.com https://checkout.paddle.com",
+      "connect-src 'self' https://api.openai.com https://api.stripe.com",
+      "frame-src https://js.stripe.com https://hooks.stripe.com",
       "form-action 'self'"
     ].join('; ')
   };
