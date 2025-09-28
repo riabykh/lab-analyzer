@@ -557,7 +557,7 @@ If no medical data is found, return:
   private parseAndValidateResponse(content: string): AnalysisResponse {
     try {
       logger.info('Raw AI response before parsing', { 
-        content: content.substring(0, 500) + (content.length > 500 ? '...' : ''),
+        contentPreview: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
         fullLength: content.length 
       });
 
@@ -570,7 +570,7 @@ If no medical data is found, return:
       }
       
       logger.info('Cleaned content for parsing', { 
-        cleanContent: cleanContent.substring(0, 500) + (cleanContent.length > 500 ? '...' : ''),
+        cleanContentPreview: cleanContent.substring(0, 200) + (cleanContent.length > 200 ? '...' : ''),
         cleanLength: cleanContent.length 
       });
 

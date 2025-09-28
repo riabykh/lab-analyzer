@@ -33,6 +33,11 @@ export async function POST(request: NextRequest) {
       maxTokens: 8000
     });
 
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Analysis timeout - please try again')), 120000); // 2 minutes
+    });
+
     logger.info('ChatGPT Universal Service initialized', { requestId });
 
     // Extract file from form data
@@ -69,7 +74,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Process file using ChatGPT Universal Service
-    const analysis = await chatgptService.processFile(file);
+    const analysis = await Promise.race([
+      chatgptService.processFile(file),
+      timeoutPromise
+    ]) as any;
 
     // Return successful response
     logger.info('Analysis completed successfully', { 
@@ -98,15 +106,22 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? {
         name: error.name,
         message: error.message,
-        stack: error.stack?.slice(0, 1000)
+        stack: error.stack?.slice(0, 200)
       } : error
     });
     
+    // Return a more user-friendly error response
     return NextResponse.json(
       { 
-        error: 'Analysis failed', 
-        details: error instanceof Error ? error.message : 'Unknown error',
-        requestId
+        success: false,
+        error: 'Analysis temporarily unavailable', 
+        details: 'Please try again in a moment. If the issue persists, contact support.',
+        requestId,
+        // Include some debug info for development
+        debugInfo: process.env.NODE_ENV === 'development' ? {
+          errorType: error instanceof Error ? error.name : 'Unknown',
+          errorMessage: error instanceof Error ? error.message : String(error)
+        } : undefined
       },
       { status: 500 }
     );
