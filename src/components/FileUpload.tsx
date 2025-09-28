@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, Image, FileIcon, Loader2 } from 'lucide-react';
 
 interface FileUploadProps {
-  onFileAnalyzed: (analysis: any) => void;
+  onFileAnalyzed: (results: any[], analysisData?: any) => void;
   onError?: (error: string) => void;
   isProcessing?: boolean;
   setIsProcessing?: (processing: boolean) => void;
@@ -59,7 +59,8 @@ export default function FileUpload({
       console.log('Analysis response:', data);
 
       if (data.success) {
-        onFileAnalyzed(data.analysis);
+        // Pass both results array and full analysis data
+        onFileAnalyzed(data.analysis?.results || [], data.analysis);
         setProgress('Analysis complete!');
       } else {
         throw new Error(data.error || 'Analysis failed');
