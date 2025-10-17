@@ -136,15 +136,7 @@ export function verifyRequestSignature(
   return signature.toLowerCase() === expectedSignature.toLowerCase();
 }
 
-// Stripe webhook signature verification
-export function verifyStripeWebhook(body: string, signature: string): boolean {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret || !signature) return false;
-
-  // Placeholder implementation for Edge Runtime compatibility
-  // In production, use proper HMAC-SHA256 signature verification with Stripe's library
-  return signature.length > 10 && body.length > 0 && webhookSecret.length > 0;
-}
+// Removed Stripe webhook verification - not needed for B2B model
 
 // Input sanitization
 export function sanitizeInput(input: string): string {
@@ -214,13 +206,13 @@ export function getSecurityHeaders(): Record<string, string> {
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://api.openai.com https://api.stripe.com https://checkout.stripe.com",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
-      "form-action 'self' https://checkout.stripe.com"
+      "connect-src 'self' https://api.openai.com",
+      "frame-src 'self'",
+      "form-action 'self'"
     ].join('; ')
   };
 }

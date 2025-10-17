@@ -8,18 +8,19 @@ export async function GET() {
     // Check if OpenAI API key is configured
     const openaiConfigured = !!process.env.OPENAI_API_KEY;
     
-    // Check if Stripe is configured
-    const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY);
+    // Check if JWT secret is configured
+    const jwtConfigured = !!process.env.JWT_SECRET;
     
     return NextResponse.json({
       status: 'healthy',
       timestamp,
-      version: '1.0.0',
+      version: '2.0.0-b2b',
       services: {
         openai: openaiConfigured ? 'configured' : 'missing',
-        stripe: stripeConfigured ? 'configured' : 'missing',
+        jwt: jwtConfigured ? 'configured' : 'missing',
       },
       environment: process.env.NODE_ENV || 'development',
+      model: 'B2B White-Label Platform',
     });
   } catch (error) {
     return NextResponse.json(

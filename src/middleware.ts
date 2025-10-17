@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySession } from './lib/auth';
+import { verifyPatientSession } from './lib/b2b-auth';
 import { RateLimiter, getSecurityHeaders } from './lib/security';
 
 // Initialize rate limiters
@@ -8,7 +8,7 @@ const analysisRateLimit = new RateLimiter(60000, 5, 300000); // 5 req/min, 5min 
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-    const clientIP = (request as any).ip || 'unknown';
+  const clientIP = (request as any).ip || 'unknown';
 
   // Apply security headers
   const securityHeaders = getSecurityHeaders();
@@ -28,87 +28,52 @@ export async function middleware(request: NextRequest) {
     ];
 
     if (origin && !allowedOrigins.includes(origin)) {
-      return NextResponse.json({ error: 'CORS: Origin not allowed' }, { status: 403 });
+      return new NextResponse(null, { status: 403 });
     }
 
-    response.headers.set('Access-Control-Allow-Origin', origin || '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': origin || '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
+    // Set CORS headers for actual requests
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
   }
 
-  // Handle preflight requests
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers: response.headers });
-  }
-
-  // Rate limiting for API routes
+  // Rate limiting
   if (pathname.startsWith('/api/')) {
-    const rateLimitResult = await generalRateLimit.check(clientIP);
-    if (!rateLimitResult.success) {
+    // General API rate limiting
+    const generalCheck = await generalRateLimit.check(clientIP);
+    if (!generalCheck.success) {
+      console.log(`🚫 Rate limit exceeded for IP: ${clientIP}`);
       return NextResponse.json(
-        { 
-          error: 'Rate limit exceeded. Please wait before trying again.',
-          resetTime: rateLimitResult.resetTime 
-        },
-        { status: 429 }
-      );
-    }
-  }
-
-  // Enhanced rate limiting for analysis endpoint
-  if (pathname === '/api/analyze') {
-    const analysisLimitResult = await analysisRateLimit.check(`${clientIP}:analyze`);
-    if (!analysisLimitResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Analysis rate limit exceeded. Please wait before analyzing another file.',
-          resetTime: analysisLimitResult.resetTime 
-        },
+        { error: 'Too many requests. Please try again later.' },
         { status: 429 }
       );
     }
 
-    // TEMPORARILY BYPASS AUTHENTICATION FOR TESTING PDF PROCESSING
-    console.log('🧪 Authentication bypassed for PDF testing');
-    
-    /*
-    // Verify authentication for analysis
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    try {
-      const authResult = await verifySession(token);
-      if (!authResult.success || !authResult.session) {
+    // Specific rate limiting for analysis endpoints
+    if (pathname === '/api/analyze') {
+      const analysisCheck = await analysisRateLimit.check(clientIP);
+      if (!analysisCheck.success) {
+        console.log(`🚫 Analysis rate limit exceeded for IP: ${clientIP}`);
         return NextResponse.json(
-          { error: 'Invalid or expired session' },
-          { status: 401 }
+          { error: 'Too many analysis requests. Please wait before trying again.' },
+          { status: 429 }
         );
       }
-
-      // Check usage limits for free users
-      if (authResult.session.plan === 'free' && authResult.session.usageCount >= authResult.session.maxUsage) {
-        return NextResponse.json(
-          { error: 'Free tier limit reached. Please upgrade to continue.' },
-          { status: 402 } // Payment Required
-        );
-      }
-
-      // Add session info to request headers for API route
-      response.headers.set('X-User-Session', JSON.stringify(authResult.session));
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Authentication verification failed' },
-        { status: 500 }
-      );
     }
-    */
   }
 
   // Protect dashboard routes for B2B model
@@ -122,16 +87,16 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const authResult = await verifySession(token);
+      const authResult = await verifyPatientSession(token);
       if (!authResult.success) {
         // Clear invalid session and redirect
-        const response = NextResponse.redirect(new URL('https://labwise.rialys.eu', request.url));
-        response.cookies.delete('labwise_session');
+        const response = NextResponse.redirect(new URL('/login', request.url));
+        response.cookies.delete('patient_session');
         return response;
       }
     } catch (error) {
-      const response = NextResponse.redirect(new URL('https://labwise.rialys.eu', request.url));
-      response.cookies.delete('labwise_session');
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('patient_session');
       return response;
     }
   }
