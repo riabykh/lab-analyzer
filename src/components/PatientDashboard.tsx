@@ -122,12 +122,12 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
               </div>
               <div className="p-6">
                 {labTests.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {labTests.slice(0, 3).map((test) => (
                       <div 
                         key={test.id}
                         onClick={() => setSelectedTestId(test.id)}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors border border-gray-100"
                       >
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-blue-100 rounded-lg">
@@ -140,7 +140,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
                             </p>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           test.status === 'analyzed' ? 'bg-green-100 text-green-800' :
                           test.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
@@ -151,7 +151,11 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">No lab tests yet</p>
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium">No lab tests yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Upload your first lab test to get started</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -272,7 +276,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -283,7 +287,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex lg:flex-col`}>
         
         {/* Clinic branding */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
@@ -302,7 +306,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
         </div>
 
         {/* Navigation */}
-        <nav className="mt-6 px-3">
+        <nav className="flex-1 mt-6 px-3">
           <div className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -316,7 +320,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
                     setSelectedTestId(null);
                     setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
                     isActive
                       ? 'text-white shadow-sm'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -332,7 +336,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
         </nav>
 
         {/* User info and logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="mt-auto p-4 border-t border-gray-200 bg-white">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
               <User className="h-4 w-4 text-gray-600" />
@@ -355,7 +359,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col lg:ml-0">
         {/* Top bar */}
         <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
@@ -375,7 +379,7 @@ export default function PatientDashboard({ session, patient, clinic }: PatientDa
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6">
+        <main className="flex-1 p-4 sm:p-6 overflow-auto">
           {renderContent()}
         </main>
       </div>
