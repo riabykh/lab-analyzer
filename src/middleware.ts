@@ -111,23 +111,14 @@ export async function middleware(request: NextRequest) {
     */
   }
 
-  // Protect app routes (except payment success)
-  if (pathname.startsWith('/app')) {
-    const searchParams = request.nextUrl.searchParams;
-    const isPaymentSuccess = searchParams.get('payment') === 'success';
-    
-    // Allow payment success page to load without session
-    if (isPaymentSuccess) {
-      console.log('🎉 Payment success detected, allowing access to /app');
-      return response;
-    }
-    
-    const token = request.cookies.get('labwise_session')?.value;
+  // Protect dashboard routes for B2B model
+  if (pathname.startsWith('/dashboard')) {
+    const token = request.cookies.get('patient_session')?.value;
 
     if (!token) {
-      // Redirect to landing page
-      console.log('❌ No session found, redirecting to landing page');
-      return NextResponse.redirect(new URL('https://labwise.rialys.eu', request.url));
+      // Redirect to login page
+      console.log('❌ No patient session found, redirecting to login');
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
     try {
